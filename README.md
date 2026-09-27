@@ -36,6 +36,9 @@ Parent verification is helpful evidence, not a gate. Only admin approval can cre
 - [Product Requirements](docs/PRD.md)
 - [RBAC and permissions](docs/RBAC.md)
 - [Technical Design](docs/TRD.md)
+- [Exact Database Schema](docs/DATABASE_SCHEMA.md)
+- [State Machines](docs/STATE_MACHINES.md)
+- [Financial Model and Flows](docs/FINANCIAL_MODEL.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Product and Architecture Decisions](docs/DECISIONS.md)
 

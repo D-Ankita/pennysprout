@@ -52,10 +52,12 @@ Legend:
 
 ## Critical Authorization Rules
 
-1. **Only Admin approval may turn task completion into an EARNING ledger entry.**
+1. **Only Admin approval may turn task completion into a TASK_REWARD ledger transaction.**
 2. Parent verification is optional and informational.
 3. Parent verification must never create or release money.
 4. The Child cannot approve their own financial reward.
 5. Wallet balances are derived from the ledger, not editable numeric fields.
 6. All writes must be scoped to the authenticated user's household.
 7. UI hiding is not security. Equivalent authorization must be enforced in backend/RLS policies.
+8. No authenticated client role receives direct write access to ledger transactions or postings; Admin financial actions also use trusted server functions.
+9. A Child may create a pending request, but may not set its review fields or terminal state.

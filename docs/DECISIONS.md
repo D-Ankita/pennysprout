@@ -87,3 +87,65 @@ Changes to this stack should be made deliberately and documented here.
 ## D-010: Beta-first, multi-household-ready
 
 UX is optimized first for Gagan's household, but database keys and authorization boundaries must support independent households from day one.
+
+## D-011: A task completion belongs to one occurrence
+
+Recurring tasks generate deterministic occurrence keys in the household timezone. A completion stores the occurrence key that was valid when it was submitted. The database enforces the configured per-occurrence limit.
+
+Reason: timestamps alone are not a reliable duplicate boundary, especially around midnight, retries, or later recurrence edits.
+
+## D-012: Financial history uses transactions and postings
+
+The financial source of truth is an immutable transaction header with one or more immutable postings to named balance buckets:
+
+- `SPENDABLE`
+- `SAVINGS`
+- `UNPAID_EARNINGS`
+
+Reason: a single event can affect more than one meaningfully different balance. For example, an earning increases both the child's virtual spendable amount and the Admin's unpaid settlement figure, while a payout changes only unpaid settlement.
+
+## D-013: Approved actions use server-side database functions
+
+Completion approval, payout recording, savings transfers, savings-withdrawal decisions, expense correction decisions, and task-proposal decisions execute through transactional PostgreSQL functions. Clients cannot write ledger tables directly.
+
+Reason: role checks, state transitions, audit records, and financial postings must commit or fail together.
+
+## D-014: Financial corrections never rewrite posted history
+
+Posted expenses and other financial transactions are never edited or deleted. An approved correction reverses the original transaction and, when appropriate, posts a replacement transaction linked to it.
+
+Reason: the family must be able to reconstruct what was originally recorded and why it changed.
+
+## D-015: Savings withdrawals require Admin approval
+
+A Child may move available spendable money into savings immediately. Returning savings to spendable requires a pending request and Admin approval.
+
+Reason: saving should be easy, while taking money back out is an intentional review moment.
+
+## D-016: Non-negative balances are enforced at write time
+
+Expense posting, saving, and approved savings withdrawal lock the child's financial scope and reject any operation that would make the affected virtual balance negative.
+
+Reason: a read-then-write check in the client is vulnerable to concurrent requests.
+
+## D-017: Historical facts use snapshots
+
+Completions snapshot the task title, default reward, and recurrence occurrence. Ledger descriptions and transaction metadata snapshot the facts needed to explain a posting later.
+
+Reason: changing a task must not rewrite the meaning of old completions or earnings.
+
+## D-018: One active household membership per user in beta
+
+The schema is household-keyed and supports future multi-household membership, but beta authorization and navigation assume one active household membership per authenticated user. Multi-household switching is deferred until its UX and authorization tests are implemented.
+
+## D-019: Notifications use a transactional outbox
+
+Trusted commands enqueue a deduplicated notification in the same database transaction as the state change. A separate worker sends Expo notifications with retry and failure tracking.
+
+Reason: an Expo outage must not roll back an approval, and a database commit must not lose its corresponding notification intent.
+
+## D-020: Recurrence is evaluated in household time
+
+Occurrence dates and weekly boundaries use the household's IANA timezone. UTC is retained for event timestamps, while the derived local occurrence date is stored on each completion.
+
+Reason: family expectations follow local calendar days, and historical occurrence membership must not move when viewed from another device timezone.

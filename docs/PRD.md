@@ -117,21 +117,22 @@ Admin can:
 
 The financial source of truth is an immutable ledger.
 
-Ledger entry types:
-- EARNING
-- EXPENSE
-- SAVINGS_TRANSFER_IN
-- SAVINGS_TRANSFER_OUT
-- PAYOUT_RECORDED
+Ledger transaction types:
+- TASK_REWARD
+- EXPENSE / EXPENSE_REVERSAL
+- SAVINGS_DEPOSIT / SAVINGS_WITHDRAWAL
+- PAYOUT / PAYOUT_REVERSAL
 - ADJUSTMENT
 
+Each transaction creates signed postings to the separate SPENDABLE, SAVINGS, and/or UNPAID_EARNINGS balance buckets. The exact rules are defined in `docs/FINANCIAL_MODEL.md`.
+
 Definitions:
-- **Earned balance:** approved rewards minus expenses and savings allocations, adjusted by admin corrections.
+- **Spendable balance:** approved rewards minus expenses and savings allocations, adjusted by auditable corrections.
 - **Savings balance:** net amount allocated into savings.
 - **Payout recorded:** records real-world cash/UPI already handed to the child. It does not create earnings.
 - **Unpaid earnings:** total approved earnings minus payouts recorded, useful for Admin to know how much is still physically owed.
 
-Admin is the only role that can create PAYOUT_RECORDED or ADJUSTMENT entries.
+Admin is the only role that can create PAYOUT or ADJUSTMENT transactions.
 
 ### Expenses
 Child can record:

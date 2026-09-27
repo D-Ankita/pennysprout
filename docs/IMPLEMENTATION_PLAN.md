@@ -23,6 +23,7 @@ Definition of done:
 Deliverables:
 - Supabase local/project setup
 - database migrations
+- schema contract tests for constraints and grants
 - Auth integration
 - household, profile and membership schema
 - role enum
@@ -39,6 +40,7 @@ Definition of done:
 - all four beta users can sign in
 - each sees only the beta household
 - unauthorized cross-role writes fail at backend
+- `0001_initial_schema.sql` applies cleanly to a fresh local database
 
 ## Phase 2: Task Management
 
@@ -60,6 +62,7 @@ Definition of done:
 
 Deliverables:
 - task completion records
+- deterministic household-timezone occurrence keys
 - mark-complete UX
 - optional Parent verification
 - Admin approval inbox
@@ -76,6 +79,7 @@ Definition of done:
 
 Deliverables:
 - append-only ledger
+- transaction headers plus signed balance-bucket postings
 - Admin approve-completion transaction
 - wallet projections
 - earnings history
@@ -83,11 +87,12 @@ Deliverables:
 - unpaid earnings calculation
 
 Definition of done:
-- one approved completion creates exactly one EARNING entry
+- one approved completion creates exactly one TASK_REWARD transaction
 - repeat approval cannot duplicate reward
 - Child/Parent cannot create reward/payout entries
 - payout is distinct from earning
 - balances reconcile from ledger alone
+- concurrent financial commands cannot make spendable or savings negative
 
 ## Phase 5: Expenses and Savings
 
