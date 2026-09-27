@@ -38,15 +38,26 @@ Parent verification is helpful evidence, not a gate. Only admin approval can cre
 - [Technical Design](docs/TRD.md)
 - [Exact Database Schema](docs/DATABASE_SCHEMA.md)
 - [State Machines](docs/STATE_MACHINES.md)
+- [Recurrence Rules](docs/RECURRENCE_RULES.md)
 - [Financial Model and Flows](docs/FINANCIAL_MODEL.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Product and Architecture Decisions](docs/DECISIONS.md)
+- [Locked Implementation Decisions](docs/DECISION_CLOSURE.md)
+- [User Flows and Screens](docs/USER_FLOWS_AND_SCREENS.md)
+- [UI Design System](docs/UI_DESIGN_SYSTEM.md)
+- [API and Command Contracts](docs/API_CONTRACTS.md)
+- [Dependency Plan](docs/DEPENDENCY_PLAN.md)
+- [Test Plan](docs/TEST_PLAN.md)
+- [Build and Release](docs/BUILD_AND_RELEASE.md)
+- [Claude Code Implementation Handoff](docs/CLAUDE_IMPLEMENTATION_HANDOFF.md)
 
 ## MVP scope
 
-The MVP includes task management, completion tracking, optional parent verification, admin reward approval, a virtual wallet, savings, expenses, payout tracking, goals, streaks, reports and notifications.
+The Android beta includes task management, completion tracking, optional parent verification, admin reward approval, a virtual wallet, savings, expenses, payout tracking, goals, display-only streaks, reports and transactional notifications.
 
 The MVP does **not** transfer real money, connect to bank accounts, initiate UPI payments, provide investments, or act as a regulated financial product.
+
+Web, desktop, Windows, macOS and iOS releases are not part of the approved beta scope.
 
 ## Working brand
 

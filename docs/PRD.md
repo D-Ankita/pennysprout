@@ -67,7 +67,8 @@ Owns the household configuration, reward approval, task approval, payout recordi
 ## 6. Functional Requirements
 
 ### Authentication and Household
-- Users sign in securely.
+- Users sign in with their own username and password; internal synthetic Auth addresses are never exposed.
+- Admin provisions accounts and temporary passwords; first login requires a password change.
 - Each user belongs to a household.
 - Household data must not be visible across households.
 - Each member has exactly one household role for MVP: CHILD, PARENT, ADMIN.
@@ -82,7 +83,7 @@ Each task supports:
 - recurrence
 - active/inactive state
 - optional daily/weekly completion limits
-- optional streak bonus configuration
+- display-only streak eligibility
 - created-by and approved-by audit metadata
 
 Recurrence options for MVP:
@@ -148,7 +149,7 @@ For MVP, an expense immediately affects the child's virtual spendable balance. E
 - Child can transfer available virtual balance into savings.
 - Child can request a savings withdrawal.
 - Admin approves withdrawal before balance is returned to spendable funds.
-- Admin configures optional default savings percentage later; automatic splitting is not required for first beta.
+- Automatic savings splitting is not part of the approved beta scope.
 
 ### Savings Goals
 Child can:
@@ -161,9 +162,7 @@ Goal deletion should require Admin approval to preserve learning history.
 
 ### Streaks
 - Streaks are computed from eligible recurring tasks.
-- Admin can configure optional streak bonus rules.
-- Streak bonus must also result in a ledger entry and be auditable.
-- MVP may ship streak display before automated monetary streak bonuses if implementation needs simplification.
+- Beta streaks are display-only. Monetary streak bonus configuration and posting are deferred.
 
 ### Reports
 Child, parent and admin can view:
@@ -186,7 +185,7 @@ Useful notifications:
 - Admin: new/edited task proposal
 - Child: reward approved/rejected
 - Child: task proposal approved/rejected
-- Optional daily reminder for incomplete recurring tasks
+- Beta sends transactional decision/action notifications only; daily reminders are deferred.
 
 Notifications must not be required for core workflow to function.
 

@@ -17,7 +17,6 @@ The first two teach budgeting. The third is a family settlement figure. A physic
 | Transaction kind | SPENDABLE | SAVINGS | UNPAID_EARNINGS |
 |---|---:|---:|---:|
 | `TASK_REWARD` | `+amount` | — | `+amount` |
-| `STREAK_BONUS` | `+amount` | — | `+amount` |
 | `EXPENSE` | `-amount` | — | — |
 | `EXPENSE_REVERSAL` | `+original amount` | — | — |
 | `SAVINGS_DEPOSIT` | `-amount` | `+amount` | — |
@@ -28,6 +27,8 @@ The first two teach budgeting. The third is a family settlement figure. A physic
 
 Amounts are signed integers in paise. Transaction business amounts remain positive; posting direction carries the sign.
 
+A zero-value approved reward creates an auditable `TASK_REWARD` transaction with business amount zero and no postings. Every other financial transaction has a positive business amount.
+
 ## 3. Derived balances
 
 For each `(household_id, child_user_id)`:
@@ -36,7 +37,7 @@ For each `(household_id, child_user_id)`:
 spendable_balance = sum(postings where bucket = SPENDABLE)
 savings_balance = sum(postings where bucket = SAVINGS)
 unpaid_earnings = sum(postings where bucket = UNPAID_EARNINGS)
-total_earned = sum(TASK_REWARD and STREAK_BONUS business amounts)
+total_earned = sum(TASK_REWARD business amounts)
 total_expenses = sum(effective EXPENSE business amounts after reversals)
 total_paid_out = sum(PAYOUT amounts) - sum(PAYOUT_REVERSAL amounts)
 ```

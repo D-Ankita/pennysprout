@@ -9,11 +9,15 @@
 - TanStack Query for server state
 - React Hook Form + Zod for forms and validation
 
+The approved platform is Android only. There is no web/desktop client. Offline mode is cached read-only; mutations require connectivity.
+
 ### Backend
 - Supabase Auth
 - PostgreSQL
 - Row Level Security
 - Supabase Edge Functions only where privileged transactional logic is required
+
+Username sign-in/account provisioning uses Edge Functions around private synthetic Supabase Auth emails. Product mutations use PostgreSQL RPCs.
 
 ### Notifications
 - Expo push notifications

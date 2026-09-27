@@ -4,20 +4,22 @@
 -- and denies all direct client writes to financial history.
 
 create extension if not exists pgcrypto;
+create schema if not exists private;
 
 create type public.household_role as enum ('CHILD', 'PARENT', 'ADMIN');
 create type public.membership_status as enum ('INVITED', 'ACTIVE', 'DISABLED');
 create type public.task_status as enum ('DRAFT', 'ACTIVE', 'INACTIVE');
+create type public.task_category as enum ('HOUSEHOLD', 'STUDY', 'HEALTH', 'RESPONSIBILITY', 'KINDNESS', 'OTHER');
 create type public.recurrence_type as enum ('ONE_TIME', 'DAILY', 'SELECTED_WEEKDAYS', 'WEEKLY');
 create type public.proposal_type as enum ('CREATE', 'UPDATE', 'DEACTIVATE');
 create type public.review_status as enum ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED');
 create type public.completion_status as enum ('PENDING_APPROVAL', 'APPROVED', 'REJECTED');
 create type public.need_want as enum ('NEED', 'WANT');
+create type public.expense_category as enum ('FOOD', 'SCHOOL', 'TRANSPORT', 'ENTERTAINMENT', 'GIFTS', 'PERSONAL', 'OTHER');
 create type public.expense_correction_type as enum ('VOID', 'REPLACE');
 create type public.ledger_bucket as enum ('SPENDABLE', 'SAVINGS', 'UNPAID_EARNINGS');
 create type public.ledger_transaction_kind as enum (
   'TASK_REWARD',
-  'STREAK_BONUS',
   'EXPENSE',
   'EXPENSE_REVERSAL',
   'SAVINGS_DEPOSIT',
@@ -34,9 +36,30 @@ create type public.notification_status as enum ('PENDING', 'PROCESSING', 'SENT',
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null check (char_length(btrim(display_name)) between 1 and 80),
+  must_change_password boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table private.login_identities (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  normalized_username text not null unique
+    check (normalized_username ~ '^[a-z0-9_.]{3,30}$'),
+  synthetic_email text not null unique,
+  created_at timestamptz not null default now()
+);
+
+create table private.login_controls (
+  normalized_username text primary key
+    check (normalized_username ~ '^[a-z0-9_.]{3,30}$'),
+  failed_attempts smallint not null default 0 check (failed_attempts between 0 and 5),
+  locked_until timestamptz,
+  last_failed_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+revoke all on schema private from public, anon, authenticated;
+revoke all on all tables in schema private from public, anon, authenticated;
 
 create table public.households (
   id uuid primary key default gen_random_uuid(),
@@ -75,13 +98,13 @@ create table public.tasks (
   household_id uuid not null references public.households(id) on delete restrict,
   title text not null check (char_length(btrim(title)) between 1 and 120),
   description text check (description is null or char_length(description) <= 1000),
-  category text not null check (char_length(btrim(category)) between 1 and 60),
+  category public.task_category not null,
   reward_minor bigint not null check (reward_minor >= 0),
   status public.task_status not null default 'DRAFT',
   recurrence public.recurrence_type not null,
-  recurrence_interval smallint not null default 1 check (recurrence_interval between 1 and 52),
+  recurrence_interval smallint not null default 1 check (recurrence_interval = 1),
   recurrence_anchor_date date not null,
-  completion_limit smallint not null default 1 check (completion_limit between 1 and 20),
+  completion_limit smallint not null default 1 check (completion_limit between 1 and 5),
   version integer not null default 1 check (version > 0),
   created_by uuid not null references auth.users(id),
   approved_by uuid references auth.users(id),
@@ -113,12 +136,12 @@ create table public.task_proposals (
   base_task_version integer check (base_task_version is null or base_task_version > 0),
   proposed_title text check (proposed_title is null or char_length(btrim(proposed_title)) between 1 and 120),
   proposed_description text check (proposed_description is null or char_length(proposed_description) <= 1000),
-  proposed_category text check (proposed_category is null or char_length(btrim(proposed_category)) between 1 and 60),
+  proposed_category public.task_category,
   proposed_reward_minor bigint check (proposed_reward_minor is null or proposed_reward_minor >= 0),
   proposed_recurrence public.recurrence_type,
-  proposed_recurrence_interval smallint check (proposed_recurrence_interval is null or proposed_recurrence_interval between 1 and 52),
+  proposed_recurrence_interval smallint check (proposed_recurrence_interval is null or proposed_recurrence_interval = 1),
   proposed_recurrence_anchor_date date,
-  proposed_completion_limit smallint check (proposed_completion_limit is null or proposed_completion_limit between 1 and 20),
+  proposed_completion_limit smallint check (proposed_completion_limit is null or proposed_completion_limit between 1 and 5),
   proposed_weekdays smallint[],
   requested_by uuid not null references auth.users(id),
   request_note text check (request_note is null or char_length(request_note) <= 1000),
@@ -169,7 +192,7 @@ create table public.task_completions (
   completed_at timestamptz not null,
   occurrence_local_date date not null,
   occurrence_key text not null check (char_length(occurrence_key) between 1 and 80),
-  occurrence_sequence smallint not null check (occurrence_sequence between 1 and 20),
+  occurrence_sequence smallint not null check (occurrence_sequence between 1 and 8),
   task_title_snapshot text not null,
   task_version_snapshot integer not null check (task_version_snapshot > 0),
   default_reward_minor bigint not null check (default_reward_minor >= 0),
@@ -215,7 +238,7 @@ create table public.ledger_transactions (
   household_id uuid not null references public.households(id) on delete restrict,
   child_user_id uuid not null,
   kind public.ledger_transaction_kind not null,
-  amount_minor bigint not null check (amount_minor > 0),
+  amount_minor bigint not null check (amount_minor >= 0),
   currency_code text not null check (currency_code ~ '^[A-Z]{3}$'),
   description text not null check (char_length(btrim(description)) between 1 and 500),
   reference_table text,
@@ -235,6 +258,9 @@ create table public.ledger_transactions (
   constraint ledger_transactions_reversal_shape check (
     (kind in ('EXPENSE_REVERSAL', 'PAYOUT_REVERSAL') and reverses_transaction_id is not null)
     or (kind not in ('EXPENSE_REVERSAL', 'PAYOUT_REVERSAL') and reverses_transaction_id is null)
+  ),
+  constraint ledger_transactions_zero_amount check (
+    amount_minor > 0 or kind = 'TASK_REWARD'
   )
 );
 
@@ -272,7 +298,7 @@ create table public.expense_correction_requests (
   reason text not null check (char_length(btrim(reason)) between 1 and 1000),
   replacement_amount_minor bigint check (replacement_amount_minor is null or replacement_amount_minor > 0),
   replacement_description text check (replacement_description is null or char_length(btrim(replacement_description)) between 1 and 500),
-  replacement_category text check (replacement_category is null or char_length(btrim(replacement_category)) between 1 and 60),
+  replacement_category public.expense_category,
   replacement_need_want public.need_want,
   replacement_expense_date date,
   requested_by uuid not null,
@@ -283,6 +309,7 @@ create table public.expense_correction_requests (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (household_id, id),
+  unique (household_id, id, child_user_id),
   foreign key (household_id, child_user_id) references public.household_members(household_id, user_id) on delete restrict,
   foreign key (household_id, expense_transaction_id, child_user_id) references public.ledger_transactions(household_id, id, child_user_id) on delete restrict,
   foreign key (household_id, requested_by) references public.household_members(household_id, user_id) on delete restrict,
@@ -342,6 +369,7 @@ create table public.savings_goals (
   updated_at timestamptz not null default now(),
   archived_at timestamptz,
   unique (household_id, id),
+  unique (household_id, id, child_user_id),
   foreign key (household_id, child_user_id) references public.household_members(household_id, user_id) on delete restrict,
   foreign key (household_id, created_by) references public.household_members(household_id, user_id) on delete restrict,
   constraint savings_goals_archive_date check (
@@ -353,29 +381,44 @@ create table public.savings_goals (
 create table public.savings_goal_allocations (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null,
+  child_user_id uuid not null,
   goal_id uuid not null,
   transaction_id uuid not null,
   amount_minor bigint not null check (amount_minor > 0),
   created_at timestamptz not null default now(),
-  foreign key (household_id, goal_id) references public.savings_goals(household_id, id) on delete restrict,
-  foreign key (household_id, transaction_id) references public.ledger_transactions(household_id, id) on delete restrict,
+  foreign key (household_id, goal_id, child_user_id) references public.savings_goals(household_id, id, child_user_id) on delete restrict,
+  foreign key (household_id, transaction_id, child_user_id) references public.ledger_transactions(household_id, id, child_user_id) on delete restrict,
   unique (goal_id, transaction_id)
 );
 
-create table public.streak_rules (
+create table public.goal_archive_requests (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households(id) on delete restrict,
-  task_id uuid not null,
-  threshold_count integer not null check (threshold_count between 2 and 365),
-  bonus_minor bigint not null check (bonus_minor >= 0),
-  is_active boolean not null default false,
-  created_by uuid not null,
+  goal_id uuid not null,
+  child_user_id uuid not null,
+  reason text not null check (char_length(btrim(reason)) between 1 and 1000),
+  requested_by uuid not null,
+  status public.review_status not null default 'PENDING',
+  reviewed_by uuid,
+  review_note text check (review_note is null or char_length(review_note) <= 1000),
+  reviewed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (task_id, threshold_count),
-  foreign key (household_id, task_id) references public.tasks(household_id, id) on delete restrict,
-  foreign key (household_id, created_by) references public.household_members(household_id, user_id) on delete restrict
+  unique (household_id, id),
+  foreign key (household_id, goal_id, child_user_id) references public.savings_goals(household_id, id, child_user_id) on delete restrict,
+  foreign key (household_id, child_user_id) references public.household_members(household_id, user_id) on delete restrict,
+  foreign key (household_id, requested_by) references public.household_members(household_id, user_id) on delete restrict,
+  foreign key (household_id, reviewed_by) references public.household_members(household_id, user_id) on delete restrict,
+  constraint goal_archive_review check (
+    (status = 'PENDING' and reviewed_by is null and reviewed_at is null)
+    or (status = 'CANCELLED' and reviewed_by is null and reviewed_at is not null)
+    or (status in ('APPROVED', 'REJECTED') and reviewed_by is not null and reviewed_at is not null)
+  )
 );
+
+create unique index goal_archive_one_pending_idx
+  on public.goal_archive_requests (goal_id)
+  where status = 'PENDING';
 
 create table public.push_tokens (
   id uuid primary key default gen_random_uuid(),
@@ -480,7 +523,7 @@ create trigger savings_withdrawals_set_updated_at before update on public.saving
 for each row execute function public.set_updated_at();
 create trigger savings_goals_set_updated_at before update on public.savings_goals
 for each row execute function public.set_updated_at();
-create trigger streak_rules_set_updated_at before update on public.streak_rules
+create trigger goal_archive_requests_set_updated_at before update on public.goal_archive_requests
 for each row execute function public.set_updated_at();
 create trigger push_tokens_set_updated_at before update on public.push_tokens
 for each row execute function public.set_updated_at();
@@ -572,7 +615,7 @@ alter table public.expense_correction_requests enable row level security;
 alter table public.savings_withdrawal_requests enable row level security;
 alter table public.savings_goals enable row level security;
 alter table public.savings_goal_allocations enable row level security;
-alter table public.streak_rules enable row level security;
+alter table public.goal_archive_requests enable row level security;
 alter table public.push_tokens enable row level security;
 alter table public.notification_outbox enable row level security;
 alter table public.idempotency_keys enable row level security;
@@ -672,8 +715,15 @@ with check (
 );
 create policy savings_allocations_select_member on public.savings_goal_allocations
 for select to authenticated using (public.is_active_household_member(household_id));
-create policy streak_rules_select_member on public.streak_rules
+create policy goal_archive_requests_select_member on public.goal_archive_requests
 for select to authenticated using (public.is_active_household_member(household_id));
+create policy goal_archive_requests_child_insert on public.goal_archive_requests
+for insert to authenticated with check (
+  requested_by = auth.uid()
+  and child_user_id = auth.uid()
+  and status = 'PENDING'
+  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
+);
 create policy push_tokens_select_self on public.push_tokens
 for select to authenticated using (user_id = auth.uid());
 create policy push_tokens_insert_self on public.push_tokens
@@ -696,13 +746,15 @@ grant select on public.profiles, public.households, public.household_members,
   public.task_completions, public.completion_verifications,
   public.ledger_transactions, public.ledger_postings,
   public.expense_correction_requests, public.savings_withdrawal_requests,
-  public.savings_goals, public.savings_goal_allocations, public.streak_rules,
+  public.savings_goals, public.savings_goal_allocations,
+  public.goal_archive_requests,
   public.push_tokens, public.notification_outbox, public.audit_events,
   public.wallet_balances to authenticated;
 
 grant update (display_name) on public.profiles to authenticated;
 grant insert on public.task_proposals, public.expense_correction_requests,
-  public.savings_withdrawal_requests, public.savings_goals to authenticated;
+  public.savings_withdrawal_requests, public.savings_goals,
+  public.goal_archive_requests to authenticated;
 grant update (name, target_minor) on public.savings_goals to authenticated;
 grant insert on public.push_tokens to authenticated;
 grant update (expo_push_token, device_label, is_active, last_seen_at, disabled_at)

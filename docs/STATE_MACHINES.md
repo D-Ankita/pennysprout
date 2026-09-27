@@ -60,8 +60,9 @@ Preconditions:
 - target member is an active Child in that household;
 - task is `ACTIVE`;
 - `completed_at` is not unreasonably in the future;
-- server derives the occurrence key using task recurrence plus household timezone;
+- server derives the occurrence key using the normative `RECURRENCE_RULES.md` algorithm;
 - the configured completion limit for that occurrence has not been reached.
+- fewer than three rejected attempts already exist for that occurrence.
 
 Atomic effects:
 
@@ -95,11 +96,11 @@ Atomic effects:
 5. Post `+approved_reward` to `UNPAID_EARNINGS`.
 6. Record audit event.
 
-The unique transaction reference `(TASK_REWARD, completion_id)` prevents duplicate credit. A retry returns the already approved result. A different reward or decision after approval fails.
+The unique transaction reference `(TASK_REWARD, completion_id)` prevents duplicate credit. A retry returns the already approved result. A different reward or decision after approval fails. A ₹0 approval still creates the transaction header for audit/idempotency but creates no zero-value posting.
 
 ### Reject completion
 
-Admin sets the pending completion to `REJECTED`, with reviewer, reason, and time. No financial transaction is created. Rejected and approved completions are terminal; reopening requires a new completion and an audit explanation.
+Admin sets the pending completion to `REJECTED`, with reviewer, mandatory reason, and time. No financial transaction is created. Rejected and approved completions are terminal. A rejected submission does not consume the completion limit, but the occurrence accepts no more than three rejected attempts.
 
 ## 4. Expense lifecycle
 

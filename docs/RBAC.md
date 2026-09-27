@@ -45,7 +45,7 @@ Legend:
 | Delete savings goal | 🟡 | ❌ | ✅ |
 | Configure financial rules | ❌ | ❌ | ✅ |
 | View reports | ✅ | ✅ | ✅ |
-| Configure streak bonuses | ❌ | ❌ | ✅ |
+| View display-only streaks | ✅ | ✅ | ✅ |
 | Configure recurrence / completion limits | ❌ | ❌ | ✅ |
 | Create financial adjustment | ❌ | ❌ | ✅ |
 | Manage users and roles | ❌ | ❌ | ✅ |

@@ -149,3 +149,23 @@ Reason: an Expo outage must not roll back an approval, and a database commit mus
 Occurrence dates and weekly boundaries use the household's IANA timezone. UTC is retained for event timestamps, while the derived local occurrence date is stored on each completion.
 
 Reason: family expectations follow local calendar days, and historical occurrence membership must not move when viewed from another device timezone.
+
+## D-021: Android-only beta and initial release
+
+PennySprout ships as an Android app. Web, PWA, desktop and iOS release work are out of scope. Beta uses an installable APK; Play Store delivery uses an AAB.
+
+## D-022: User-facing username and password
+
+Every family member receives separate username/password credentials. A trusted authentication gateway maps the normalized username to a private synthetic Supabase Auth email, enforces five-attempt/15-minute lockout, and never exposes the internal address.
+
+## D-023: Offline is read-only
+
+Cached reads display their last refresh time. Mutations require connectivity and server confirmation; there is no offline mutation queue.
+
+## D-024: Beta streaks are non-monetary
+
+Beta computes and displays streaks but does not create monetary streak bonuses. Automated bonus posting requires a future explicit decision and migration.
+
+## D-025: Implementation dependency baseline is locked
+
+Node 24 LTS, npm, stable Expo SDK 57, React Native 0.86.3, React 19.2.3, TypeScript 6.0.3, Supabase, TanStack Query, React Hook Form and Zod form the approved baseline. Claude may not substitute or upgrade the foundation during feature work.

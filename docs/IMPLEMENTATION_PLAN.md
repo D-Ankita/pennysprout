@@ -12,6 +12,7 @@ Deliverables:
 - environment-variable strategy
 - CI for lint, typecheck and tests
 - README developer setup
+- locked Node/npm/Expo dependency baseline from `DEPENDENCY_PLAN.md`
 
 Definition of done:
 - app launches locally
@@ -29,6 +30,7 @@ Deliverables:
 - role enum
 - base RLS policies
 - seed script for beta household
+- username authentication gateway, lockout, temporary-password change and Admin recovery
 
 Seed roles:
 - Gagan -> CHILD
@@ -119,7 +121,7 @@ Deliverables:
 - completion statistics
 - Admin payout report
 
-Automated monetary streak bonuses may be deferred until core ledger beta is stable. Display-only streaks should ship first if needed.
+Beta ships display-only streaks. Automated monetary streak bonuses are outside the approved scope.
 
 ## Phase 7: Notifications and UX Polish
 
@@ -146,7 +148,7 @@ Run scenarios:
 - expense then savings transfer
 - savings withdrawal
 - partial payout
-- payout greater than unpaid amount warning
+- payout greater than unpaid amount rejection
 - task proposal edit and rejection
 - recurrence boundary around midnight
 - temporary network failure during approval
@@ -171,10 +173,10 @@ Before public Play Store launch:
 - support/contact page
 - age/child-data compliance review
 - Play Console disclosures and Data Safety form
-- production analytics/crash reporting
+- privacy-disclosed production crash reporting; no behavioral analytics
 - production backups
 - account deletion flow
-- secure invitation/onboarding
+- hardened production account provisioning and recovery
 - domain decision
 - Play Store screenshots and listing assets
 
