@@ -22,7 +22,7 @@ Definition of done:
 ## Phase 1: Supabase Foundation
 
 Deliverables:
-- Supabase local/project setup
+- Supabase local setup on Podman Desktop
 - database migrations
 - schema contract tests for constraints and grants
 - Auth integration
@@ -164,21 +164,19 @@ Track:
 - missed notifications
 - habits users stop engaging with
 
-## Phase 9: Public Release Preparation
+## Phase 9: Zero-Cost Family Release
 
-Before public Play Store launch:
-- official PennySprout trademark clearance
-- privacy policy
-- terms
-- support/contact page
-- age/child-data compliance review
-- Play Console disclosures and Data Safety form
-- privacy-disclosed production crash reporting; no behavioral analytics
-- production backups
-- account deletion flow
-- hardened production account provisioning and recovery
-- domain decision
-- Play Store screenshots and listing assets
+Before direct APK distribution:
+- verify the hosted Supabase project is on the Free plan with no paid add-ons;
+- verify Firebase remains on the no-cost Spark plan;
+- produce and archive an encrypted logical database export;
+- build and sign the APK locally;
+- record APK checksum, version, Git SHA and signing-certificate fingerprint;
+- install and upgrade-test the exact APK on a physical family device;
+- share the APK directly with the four family users;
+- document free-tier limitations and recovery steps.
+
+Play Store publication, paid hosting, custom domains and paid monitoring remain outside the approved scope.
 
 ## Engineering Rules
 

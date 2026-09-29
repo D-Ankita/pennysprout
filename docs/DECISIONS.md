@@ -150,9 +150,9 @@ Occurrence dates and weekly boundaries use the household's IANA timezone. UTC is
 
 Reason: family expectations follow local calendar days, and historical occurrence membership must not move when viewed from another device timezone.
 
-## D-021: Android-only beta and initial release
+## D-021: Android-only beta and family release
 
-PennySprout ships as an Android app. Web, PWA, desktop and iOS release work are out of scope. Beta uses an installable APK; Play Store delivery uses an AAB.
+PennySprout ships as an Android app. Web, PWA, desktop and iOS release work are out of scope. Beta and family releases use a locally signed, directly installed APK. Play Store delivery and AAB submission are outside the approved scope.
 
 ## D-022: User-facing username and password
 
@@ -181,3 +181,9 @@ Reason: one mutation boundary prevents field spoofing, keeps validation/audit co
 Phase 0 pins ESLint 9.39.5, `eslint-import-resolver-typescript` 3.10.1, Jest 29.7.0 and `@types/jest` 29.5.14. These are the versions supported by Expo SDK 57's lint and test integrations. The resolver is a direct development dependency because Expo's nested copy is not discoverable by `eslint-plugin-import` under the locked npm layout. The lockfile also overrides `@react-native/metro-config` to 0.86.3 so it matches React Native and its community CLI plugin. ESLint 10, Jest 30 and Metro 0.87 remain prohibited until a future Expo or React Native upgrade supports them and all validation gates pass without exclusions.
 
 Reason: lint and Expo Doctor are required gates. Suppressing Doctor checks or removing lint from CI would hide a known-incompatible toolchain rather than resolve it.
+
+## D-028: The approved product must operate at zero monetary cost
+
+Development uses Podman Desktop, the Supabase CLI and the local Android toolchain. The family beta uses one Supabase Free project, no-cost Expo/FCM push delivery and directly distributed locally signed APKs. It does not require Docker Desktop, a paid EAS plan, Google Play Console, a custom domain, paid monitoring or Supabase paid backups. No payment method or automatic overage is approved.
+
+Reason: the owner requires development and family distribution to incur no cost. Free-quota exhaustion therefore pauses the affected service or falls back to local tooling; it never triggers an upgrade. `ZERO_COST_OPERATIONS.md` is the authoritative cost guardrail.

@@ -51,7 +51,8 @@ Use `expo-crypto.randomUUID()` for idempotency keys. Use React Native `StyleShee
 | Package/tool | Baseline | Purpose |
 |---|---:|---|
 | Supabase CLI | `2.118.0` | Local stack, migrations and database tests |
-| EAS CLI | `24.8.0` | Android builds, credentials and submission |
+| Android SDK/Gradle through Expo | Version selected by Expo SDK 57 | Default local development and signed APK builds |
+| EAS CLI | `24.8.0` | Optional Free-plan fallback only; never a paid build or submission path |
 | `jest` / `jest-expo` | `29.7.0` / `57.0.5` | Expo SDK 57-compatible unit/component runner and preset |
 | `@types/jest` | `29.5.14` | Jest 29 TypeScript types required by Expo SDK 57 |
 | `@testing-library/react-native` | `14.0.1` | Behavior-focused component tests |
@@ -86,22 +87,25 @@ Rollback: remove an override only when an Expo SDK upgrade resolves the same pac
 - **UI frameworks:** rejected to avoid generic visuals, upgrade coupling and unused surface area.
 - **Direct FCM client/server integration:** rejected for beta; Expo Push Service is adequate and keeps credentials manageable.
 - **Expo Go:** rejected as a production-development environment; use development builds.
+- **Docker Desktop:** not required; Podman Desktop is the locked free local container runtime.
+- **Paid EAS, Supabase, monitoring or hosting plans:** rejected by the zero-cost constraint.
+- **Google Play distribution:** rejected for the family release; distribute the signed APK directly.
 
 ## 5. External dependencies and owners
 
 | Dependency | Required before | Owner action |
 |---|---|---|
-| Expo/EAS account | First development build | Owner signs in and owns project |
-| Supabase local Docker-compatible runtime | Database development | Install and verify locally |
-| Hosted Supabase staging | Family acceptance | Owner creates/links project |
-| Hosted Supabase production | Production build | Owner creates separate project |
-| Android keystore | First signed preview | Generate through owner EAS account and back up |
-| Firebase/FCM v1 credentials | Push testing | Owner creates project/credentials |
-| Google Play Console | Closed/public testing | Owner account and app registration |
+| Podman Desktop | Database development | Install and verify the free Docker-compatible runtime locally |
+| Android SDK/JDK | First native build | Use the existing local Android toolchain |
+| Hosted Supabase Free project | Family acceptance | Owner creates one Free project without a payment method |
+| Android keystore | First signed family APK | Generate locally and back up outside Git |
+| Firebase/FCM Spark credentials | Push testing | Owner creates a no-cost Spark project without Blaze billing |
 | Physical Android device | Beta gate | Install preview APK and test notifications |
-| Privacy/support pages | Public release | Owner supplies approved content/URLs |
+| Expo account | Push project registration or optional Free EAS fallback | Keep the account on the non-billable Free plan |
 
 Missing external access blocks only the corresponding environment gate, not unrelated local implementation.
+
+Every dependency and provider must also satisfy [`ZERO_COST_OPERATIONS.md`](ZERO_COST_OPERATIONS.md). Quota exhaustion is a stop condition, not authorization to purchase capacity.
 
 ## 6. Dependency change procedure
 

@@ -27,6 +27,7 @@ If documents appear inconsistent, stop and report the exact conflict. Otherwise 
 - Every row/function is household-authorized server-side.
 - UI confirmation never precedes server confirmation for money.
 - No AI attribution or co-author metadata.
+- Every development, hosting, build and distribution choice follows `ZERO_COST_OPERATIONS.md`; quota exhaustion never authorizes payment.
 
 ## Git execution
 
@@ -68,11 +69,11 @@ Complete design tokens, accessibility, dense/empty/error states, performance, se
 
 ### 8. Beta delivery
 
-Provision staging, create signed preview APK, run gates, record build provenance and provide the private install link. Do not claim production readiness.
+Provision one Supabase Free family project, create a locally signed APK, run gates, record build provenance and provide the APK for direct installation. Do not add a payment method or claim public-store readiness.
 
-### 9. Public release preparation
+### 9. Zero-cost family release
 
-Complete only after external legal/store/credential gates are provided. Produce signed AAB, closed-test evidence and release checklist; publication remains an explicit owner action/gate.
+Complete the free-tier audit, encrypted backup, locally signed APK, direct-install upgrade test and family release checklist. Store publication remains outside scope and requires a new owner decision.
 
 ## Phase completion checklist
 

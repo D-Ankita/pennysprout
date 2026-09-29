@@ -79,7 +79,7 @@ For the first empty beta database:
 1. Apply the migration locally.
 2. Run schema and RLS integration tests using separate Child, Parent, Admin, and unrelated-household identities.
 3. Seed the beta household through a non-production seed script using real Auth user IDs.
-4. Apply to a staging Supabase project and rerun tests.
+4. Apply to the hosted Supabase Free family project only after local tests and an encrypted logical backup.
 5. Back up before production apply; record the applied migration version.
 
 This migration has not been applied to any remote Supabase project merely by being committed to the repository.

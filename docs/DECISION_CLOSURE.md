@@ -8,13 +8,14 @@ This file resolves product and engineering choices that an implementer might oth
 
 - PennySprout is a family habit and money-learning product, not a banking product.
 - The first household is Gagan (Child), Mom and Dad (Parents), and Sister (Admin).
-- The beta and initial public release are Android-only.
+- The beta and initial family release are Android-only and distributed as a directly installed APK.
 - There is no web, PWA, desktop, Windows, or macOS application.
 - Code should avoid unnecessary Android-only domain assumptions, but iOS build and release work is out of scope.
 - Android 9 and newer are supported.
 - INR and `Asia/Kolkata` are fixed for the beta household.
 - One active household per user is supported in the beta UX.
 - The app never moves real money. It records rewards, spending, saving, and physical payouts performed outside the app.
+- The approved scope must operate at zero monetary cost. No store publication, paid subscription, paid usage overage or payment method is permitted without a new owner decision.
 
 ## 2. Authentication and membership
 

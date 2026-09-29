@@ -31,6 +31,10 @@ Parent verification is helpful evidence, not a gate. Only admin approval can cre
 - Expo Notifications
 - GitHub Actions for checks and release automation
 
+## Zero-cost constraint
+
+The approved project uses Podman Desktop for local containers, one Supabase Free project for the family beta, no-cost Expo/FCM push delivery, local Android builds and direct APK distribution. It does not require Docker Desktop, paid EAS, Google Play Console, a custom domain or another paid service. Free-quota exhaustion pauses the affected workflow; it never authorizes an upgrade. See [Zero-Cost Operations](docs/ZERO_COST_OPERATIONS.md).
+
 ## Developer setup
 
 Prerequisites: Node.js 24 LTS (`.nvmrc`; `engine-strict` is enabled) and the npm version bundled with it. Android is the only approved platform. Use an Expo development build or an Android emulator; Expo Go is not a supported development environment.
@@ -90,6 +94,7 @@ CI (`.github/workflows/ci.yml`) runs all of the above on Node 24 plus a gitleaks
 - [Dependency Plan](docs/DEPENDENCY_PLAN.md)
 - [Test Plan](docs/TEST_PLAN.md)
 - [Build and Release](docs/BUILD_AND_RELEASE.md)
+- [Zero-Cost Operations](docs/ZERO_COST_OPERATIONS.md)
 - [Claude Code Implementation Handoff](docs/CLAUDE_IMPLEMENTATION_HANDOFF.md)
 
 ## MVP scope
@@ -106,4 +111,4 @@ Web, desktop, Windows, macOS and iOS releases are not part of the approved beta 
 
 Working tagline: **Small habits. Smart money.**
 
-Brand and trademark clearance is still pending final official verification before public launch.
+Brand and trademark clearance is still pending final official verification before any future public launch. The approved family APK distribution is private.

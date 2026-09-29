@@ -214,6 +214,8 @@ The Gagan beta is successful if:
 
 ## 9. Future Ideas
 
+Future ideas are not approved scope. Any idea that introduces a fee, subscription, payment method or billable provider requires a new explicit owner decision under `ZERO_COST_OPERATIONS.md`.
+
 Not part of MVP:
 - multiple children per family
 - badges and levels
