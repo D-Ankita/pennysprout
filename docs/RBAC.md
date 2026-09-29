@@ -59,5 +59,5 @@ Legend:
 5. Wallet balances are derived from the ledger, not editable numeric fields.
 6. All writes must be scoped to the authenticated user's household.
 7. UI hiding is not security. Equivalent authorization must be enforced in backend/RLS policies.
-8. No authenticated client role receives direct write access to ledger transactions or postings; Admin financial actions also use trusted server functions.
+8. No authenticated client role receives direct table-write access. Every mutation uses a trusted server function; ledger transactions and postings are never client-writable.
 9. A Child may create a pending request, but may not set its review fields or terminal state.

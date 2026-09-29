@@ -5,7 +5,7 @@ The executable schema is [`supabase/migrations/0001_initial_schema.sql`](../supa
 ## 1. Ownership and identity
 
 - `profiles` extends `auth.users` with non-sensitive display data.
-- `private.login_identities` maps normalized usernames to internal synthetic Auth emails; `private.login_controls` supports lockout. Neither is exposed to authenticated clients.
+- `private.login_identities` maps normalized usernames to random, unguessable internal Auth aliases; `private.login_controls` supports lockout. Neither is exposed to authenticated clients.
 - `households` owns all product data and defines currency/timezone.
 - `household_members` grants one role per user per household and tracks invitation status.
 - Beta assumes one active membership per user in the app, while every data key remains household-scoped.
@@ -46,7 +46,9 @@ Audit metadata must not contain auth tokens, secrets, or unnecessary child perso
 
 ## 5. Mutation boundary
 
-Clients may insert only non-financial requests permitted by RLS. Final decisions and all money-affecting operations go through functions with explicit role checks:
+Authenticated clients have read-only table access where RLS permits it. Every product mutation, including creation of pending requests, goes through a named function with explicit role and invariant checks:
+
+PostgreSQL grants function execution to `PUBLIC` by default. Each function migration must revoke that default before granting only `authenticated` or `service_role` according to `API_CONTRACTS.md`. `SECURITY DEFINER` functions use an empty search path and fully-qualified object names.
 
 - `approve_completion`
 - `reject_completion`

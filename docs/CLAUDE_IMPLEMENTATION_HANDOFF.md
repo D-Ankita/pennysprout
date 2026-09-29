@@ -10,7 +10,7 @@ If documents appear inconsistent, stop and report the exact conflict. Otherwise 
 
 1. `DECISION_CLOSURE.md`
 2. `STATE_MACHINES.md`, `RECURRENCE_RULES.md` and `FINANCIAL_MODEL.md`
-3. `API_CONTRACTS.md` and `DATABASE_SCHEMA.md`
+3. `API_CONTRACTS.md`, `AUTH_AND_ONBOARDING.md`, `NOTIFICATIONS.md` and `DATABASE_SCHEMA.md`
 4. `RBAC.md`
 5. `USER_FLOWS_AND_SCREENS.md` and `UI_DESIGN_SYSTEM.md`
 6. `DEPENDENCY_PLAN.md`, `TEST_PLAN.md`, `BUILD_AND_RELEASE.md`

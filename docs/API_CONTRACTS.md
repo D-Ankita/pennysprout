@@ -2,7 +2,7 @@
 
 Status: **NORMATIVE IMPLEMENTATION CONTRACT**
 
-The client uses Supabase reads protected by RLS and named transactional RPCs for commands. Authentication provisioning/sign-in uses Edge Functions because it needs service credentials and server-side lockout. Client modules expose typed functions; screens do not call Supabase directly.
+The client uses Supabase reads protected by RLS and named transactional RPCs for every product mutation. Authentication provisioning/sign-in uses Edge Functions because it needs service credentials and server-side lockout. Authenticated clients receive no direct insert/update/delete grants on product tables. Client modules expose typed functions; screens do not call Supabase directly.
 
 ## 1. Common shapes
 
@@ -36,11 +36,11 @@ The UI maps expected codes to approved copy. Raw SQL messages, stack traces and 
 
 ### `auth-sign-in`
 
-Input: `{ username, password }`. Normalize username, enforce lockout, look up the service-only synthetic email, call Supabase password grant, update failure controls, and return the Supabase session plus `mustChangePassword`. Response is generic on all credential failures.
+Input: `{ username, password }`. Normalize username, enforce lockout, look up the service-only random Auth alias, call Supabase password grant, update failure controls, and return the Supabase session plus `mustChangePassword`. Response is generic on all credential failures. The client must not render or log the Auth email that may be present in the session user object.
 
 ### `admin-create-member`
 
-Admin JWT required. Input: `{ householdId, username, displayName, role, temporaryPassword, meta }`. Only `CHILD` or `PARENT` may be created after household bootstrap. Creates Auth user, private login identity, profile and membership atomically/compensatably. Returns the member projection; never persists or re-returns the password after the response.
+Admin JWT required. Input: `{ householdId, username, displayName, role, temporaryPassword, meta }`. Only `CHILD` or `PARENT` may be created after household bootstrap. Generates a cryptographically random Auth alias under the reserved internal domain, then creates Auth user, private login identity, profile and membership atomically/compensatably. Returns the member projection; never persists or re-returns the password after the response.
 
 ### `admin-reset-password`
 
@@ -175,6 +175,8 @@ register_push_token(p_expo_push_token text, p_device_label text, p_idempotency_k
 ```
 
 Decision parameters accept only the relevant terminal value (`APPROVED` or `REJECTED`); cancellation has its own function. Nullable replacement/applied inputs are validated according to proposal/correction type. Admin actions always derive household membership from the target entity rather than accepting a household ID from the client.
+
+Every migration that creates an RPC must immediately `REVOKE ALL` from `PUBLIC`, `anon`, and `authenticated`, then grant only the intended role. Authenticated product RPCs grant `EXECUTE` to `authenticated`; authentication/private-helper RPCs grant only to `service_role`. Every `SECURITY DEFINER` function sets `search_path = ''`, schema-qualifies objects, validates `auth.uid()`/membership explicitly, and is covered by direct unauthorized-invocation tests.
 
 ## 5. Read contracts
 

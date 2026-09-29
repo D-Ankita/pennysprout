@@ -156,7 +156,7 @@ PennySprout ships as an Android app. Web, PWA, desktop and iOS release work are 
 
 ## D-022: User-facing username and password
 
-Every family member receives separate username/password credentials. A trusted authentication gateway maps the normalized username to a private synthetic Supabase Auth email, enforces five-attempt/15-minute lockout, and never exposes the internal address.
+Every family member receives separate username/password credentials. A trusted authentication gateway maps the normalized username to a private random, unguessable Supabase Auth email and enforces five-attempt/15-minute lockout. The alias is not derived from the username or used for recovery.
 
 ## D-023: Offline is read-only
 
@@ -169,3 +169,9 @@ Beta computes and displays streaks but does not create monetary streak bonuses. 
 ## D-025: Implementation dependency baseline is locked
 
 Node 24 LTS, npm, stable Expo SDK 57, React Native 0.86.3, React 19.2.3, TypeScript 6.0.3, Supabase, TanStack Query, React Hook Form and Zod form the approved baseline. Claude may not substitute or upgrade the foundation during feature work.
+
+## D-026: Authenticated tables are read-only
+
+Authenticated clients receive no direct insert, update, or delete table grants. Every product mutation, including pending requests and push-token registration, uses an explicitly granted transactional function.
+
+Reason: one mutation boundary prevents field spoofing, keeps validation/audit consistent, and makes role tests match actual client behavior.

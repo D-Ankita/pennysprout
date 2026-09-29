@@ -27,12 +27,12 @@ Use `.nvmrc` and `package.json.engines` to pin Node 24. CI must use the same maj
 | `@tanstack/react-query` | `5.104.0` | Server cache, retries and invalidation |
 | `react-hook-form` | `7.89.0` | Form state |
 | `zod` | `4.6.5` | Shared input/output validation |
-| `react-native-url-polyfill` | exact latest verified during scaffold | Supabase React Native URL support |
-| `uuid` | exact current maintained major verified during scaffold | Mutation idempotency UUIDs |
+| `react-native-url-polyfill` | `4.0.0` | Supabase React Native URL support |
 
 Install Expo-native modules through `npx expo install` so Expo selects compatible versions:
 
 - `expo-constants`
+- `expo-crypto`
 - `expo-device`
 - `expo-linking`
 - `expo-network`
@@ -44,7 +44,7 @@ Install Expo-native modules through `npx expo install` so Expo selects compatibl
 - `react-native-safe-area-context`
 - `react-native-screens`
 
-Use React Native `StyleSheet` plus local tokens. Do not add NativeWind, Tailwind, Redux, MobX, Zustand, a date library, or a component framework. Server SQL owns recurrence/timezone decisions; the client uses `Intl` for display.
+Use `expo-crypto.randomUUID()` for idempotency keys. Use React Native `StyleSheet` plus local tokens. Do not add NativeWind, Tailwind, Redux, MobX, Zustand, a date library, UUID package, or a component framework. Server SQL owns recurrence/timezone decisions; the client uses `Intl` for display.
 
 ## 3. Development and validation dependencies
 
@@ -52,14 +52,16 @@ Use React Native `StyleSheet` plus local tokens. Do not add NativeWind, Tailwind
 |---|---:|---|
 | Supabase CLI | `2.118.0` | Local stack, migrations and database tests |
 | EAS CLI | `24.8.0` | Android builds, credentials and submission |
-| `jest-expo` | Expo-compatible version | Unit/component runner |
-| `@testing-library/react-native` | Compatible stable version | Behavior-focused component tests |
-| ESLint | Expo template-compatible version | Static analysis |
+| `jest` / `jest-expo` | `30.5.2` / `57.0.5` | Unit/component runner and Expo preset |
+| `@types/jest` | `30.0.0` | Jest TypeScript types |
+| `@testing-library/react-native` | `14.0.1` | Behavior-focused component tests |
+| `react-test-renderer` | `19.2.3` | Must match locked React version |
+| ESLint / `eslint-config-expo` | `10.11.0` / `57.0.2` | Static analysis |
 | Prettier | `3.9.9` | Deterministic formatting |
 | pgTAP | Version shipped by local Supabase | RLS/function/database tests |
 | Maestro | Stable CLI pinned in CI setup | Physical/emulator end-to-end flows |
 
-Expo-managed versions are resolved by the SDK 57 scaffold and `npx expo install --check`; the committed lockfile records the exact result.
+Expo-managed versions are resolved by the SDK 57 scaffold and `npx expo install --check`; the committed lockfile records the exact result. The initial expected native versions include `expo-network ~57.0.2`, `expo-crypto ~57.0.3`, and `expo-secure-store ~57.0.4`; Expo CLI remains authoritative if a later SDK 57 patch requires a compatible patch adjustment during Phase 0.
 
 ## 4. Rejected alternatives
 

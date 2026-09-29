@@ -22,8 +22,8 @@ This file resolves product and engineering choices that an implementer might oth
 - Gagan, Mom, Dad, and Sister each receive separate credentials.
 - No real email, phone number, OTP, magic link, or social login is required.
 - Usernames are trimmed, lower-cased for comparison, limited to `a-z`, `0-9`, `_`, `.`, 3–30 characters, and globally unique.
-- Supabase Auth uses a deterministic internal synthetic email that is never displayed or logged.
-- Sign-in goes through a trusted authentication gateway so server-side failure counting and lockout can be enforced.
+- Supabase Auth uses a random, unguessable internal synthetic email generated at account creation. It is not derived from the username and is never intentionally displayed or logged. It may exist in internal Supabase session claims and is not treated as a secret or recovery channel.
+- Sign-in goes through a trusted authentication gateway so server-side failure counting and lockout can be enforced. The unguessable Auth alias prevents practical bypass through Supabase's direct password endpoint.
 - Five consecutive invalid attempts lock the username for 15 minutes. Successful authentication clears the counter.
 - Login errors are always generic.
 - Admin creates accounts with temporary passwords.

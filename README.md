@@ -46,6 +46,8 @@ Parent verification is helpful evidence, not a gate. Only admin approval can cre
 - [User Flows and Screens](docs/USER_FLOWS_AND_SCREENS.md)
 - [UI Design System](docs/UI_DESIGN_SYSTEM.md)
 - [API and Command Contracts](docs/API_CONTRACTS.md)
+- [Authentication and Onboarding](docs/AUTH_AND_ONBOARDING.md)
+- [Notification Delivery](docs/NOTIFICATIONS.md)
 - [Dependency Plan](docs/DEPENDENCY_PLAN.md)
 - [Test Plan](docs/TEST_PLAN.md)
 - [Build and Release](docs/BUILD_AND_RELEASE.md)

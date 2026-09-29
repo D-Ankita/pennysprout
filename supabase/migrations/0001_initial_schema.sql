@@ -635,9 +635,6 @@ using (
       and theirs.status = 'ACTIVE'
   )
 );
-create policy profiles_update_self on public.profiles
-for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
-
 create policy households_select_member on public.households
 for select to authenticated using (public.is_active_household_member(id));
 create policy household_members_select_member on public.household_members
@@ -656,13 +653,6 @@ for select to authenticated using (
 
 create policy task_proposals_select_member on public.task_proposals
 for select to authenticated using (public.is_active_household_member(household_id));
-create policy task_proposals_child_insert on public.task_proposals
-for insert to authenticated with check (
-  requested_by = auth.uid()
-  and status = 'PENDING'
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-);
-
 create policy task_completions_select_member on public.task_completions
 for select to authenticated using (public.is_active_household_member(household_id));
 create policy completion_verifications_select_member on public.completion_verifications
@@ -675,72 +665,23 @@ for select to authenticated using (public.is_active_household_member(household_i
 
 create policy expense_corrections_select_member on public.expense_correction_requests
 for select to authenticated using (public.is_active_household_member(household_id));
-create policy expense_corrections_child_insert on public.expense_correction_requests
-for insert to authenticated with check (
-  requested_by = auth.uid()
-  and child_user_id = auth.uid()
-  and status = 'PENDING'
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-);
-
 create policy savings_withdrawals_select_member on public.savings_withdrawal_requests
 for select to authenticated using (public.is_active_household_member(household_id));
-create policy savings_withdrawals_child_insert on public.savings_withdrawal_requests
-for insert to authenticated with check (
-  requested_by = auth.uid()
-  and child_user_id = auth.uid()
-  and status = 'PENDING'
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-);
-
 create policy savings_goals_select_member on public.savings_goals
 for select to authenticated using (public.is_active_household_member(household_id));
-create policy savings_goals_child_insert on public.savings_goals
-for insert to authenticated with check (
-  created_by = auth.uid()
-  and child_user_id = auth.uid()
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-);
-create policy savings_goals_child_update on public.savings_goals
-for update to authenticated
-using (
-  child_user_id = auth.uid()
-  and status <> 'ARCHIVED'
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-)
-with check (
-  child_user_id = auth.uid()
-  and status <> 'ARCHIVED'
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-);
 create policy savings_allocations_select_member on public.savings_goal_allocations
 for select to authenticated using (public.is_active_household_member(household_id));
 create policy goal_archive_requests_select_member on public.goal_archive_requests
 for select to authenticated using (public.is_active_household_member(household_id));
-create policy goal_archive_requests_child_insert on public.goal_archive_requests
-for insert to authenticated with check (
-  requested_by = auth.uid()
-  and child_user_id = auth.uid()
-  and status = 'PENDING'
-  and public.has_household_role(household_id, array['CHILD']::public.household_role[])
-);
-create policy push_tokens_select_self on public.push_tokens
-for select to authenticated using (user_id = auth.uid());
-create policy push_tokens_insert_self on public.push_tokens
-for insert to authenticated with check (user_id = auth.uid());
-create policy push_tokens_update_self on public.push_tokens
-for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy notification_outbox_select_recipient on public.notification_outbox
-for select to authenticated using (
-  recipient_user_id = auth.uid()
-  and public.is_active_household_member(household_id)
-);
 create policy audit_events_select_member on public.audit_events
 for select to authenticated using (public.is_active_household_member(household_id));
 
--- Authenticated clients receive read access where RLS permits it. There are no
--- client INSERT/UPDATE/DELETE grants for ledger, posting, idempotency, or audit
--- tables. Later SECURITY DEFINER command functions own those writes.
+-- Remove Supabase/default privileges first. Authenticated clients receive only
+-- the explicit read access below; later SECURITY DEFINER command functions own
+-- every product mutation.
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+
 grant select on public.profiles, public.households, public.household_members,
   public.tasks, public.task_schedule_weekdays, public.task_proposals,
   public.task_completions, public.completion_verifications,
@@ -748,20 +689,5 @@ grant select on public.profiles, public.households, public.household_members,
   public.expense_correction_requests, public.savings_withdrawal_requests,
   public.savings_goals, public.savings_goal_allocations,
   public.goal_archive_requests,
-  public.push_tokens, public.notification_outbox, public.audit_events,
+  public.audit_events,
   public.wallet_balances to authenticated;
-
-grant update (display_name) on public.profiles to authenticated;
-grant insert on public.task_proposals, public.expense_correction_requests,
-  public.savings_withdrawal_requests, public.savings_goals,
-  public.goal_archive_requests to authenticated;
-grant update (name, target_minor) on public.savings_goals to authenticated;
-grant insert on public.push_tokens to authenticated;
-grant update (expo_push_token, device_label, is_active, last_seen_at, disabled_at)
-  on public.push_tokens to authenticated;
-
-revoke all on public.ledger_transactions, public.ledger_postings,
-  public.idempotency_keys, public.notification_outbox, public.audit_events
-  from anon, authenticated;
-grant select on public.ledger_transactions, public.ledger_postings,
-  public.notification_outbox, public.audit_events to authenticated;
