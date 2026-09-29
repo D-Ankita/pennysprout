@@ -175,3 +175,9 @@ Node 24 LTS, npm, stable Expo SDK 57, React Native 0.86.3, React 19.2.3, TypeScr
 Authenticated clients receive no direct insert, update, or delete table grants. Every product mutation, including pending requests and push-token registration, uses an explicitly granted transactional function.
 
 Reason: one mutation boundary prevents field spoofing, keeps validation/audit consistent, and makes role tests match actual client behavior.
+
+## D-027: Expo compatibility wins over newer tooling majors
+
+Phase 0 pins ESLint 9.39.5, `eslint-import-resolver-typescript` 3.10.1, Jest 29.7.0 and `@types/jest` 29.5.14. These are the versions supported by Expo SDK 57's lint and test integrations. The resolver is a direct development dependency because Expo's nested copy is not discoverable by `eslint-plugin-import` under the locked npm layout. The lockfile also overrides `@react-native/metro-config` to 0.86.3 so it matches React Native and its community CLI plugin. ESLint 10, Jest 30 and Metro 0.87 remain prohibited until a future Expo or React Native upgrade supports them and all validation gates pass without exclusions.
+
+Reason: lint and Expo Doctor are required gates. Suppressing Doctor checks or removing lint from CI would hide a known-incompatible toolchain rather than resolve it.

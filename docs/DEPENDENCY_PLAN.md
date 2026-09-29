@@ -52,16 +52,29 @@ Use `expo-crypto.randomUUID()` for idempotency keys. Use React Native `StyleShee
 |---|---:|---|
 | Supabase CLI | `2.118.0` | Local stack, migrations and database tests |
 | EAS CLI | `24.8.0` | Android builds, credentials and submission |
-| `jest` / `jest-expo` | `30.5.2` / `57.0.5` | Unit/component runner and Expo preset |
-| `@types/jest` | `30.0.0` | Jest TypeScript types |
+| `jest` / `jest-expo` | `29.7.0` / `57.0.5` | Expo SDK 57-compatible unit/component runner and preset |
+| `@types/jest` | `29.5.14` | Jest 29 TypeScript types required by Expo SDK 57 |
 | `@testing-library/react-native` | `14.0.1` | Behavior-focused component tests |
 | `react-test-renderer` | `19.2.3` | Must match locked React version |
-| ESLint / `eslint-config-expo` | `10.11.0` / `57.0.2` | Static analysis |
+| ESLint / `eslint-config-expo` | `9.39.5` / `57.0.2` | Expo SDK 57-compatible static analysis |
+| `eslint-import-resolver-typescript` | `3.10.1` | Direct pin so Expo lint can resolve the `@/*` TypeScript path alias under npm's nested dependency layout |
 | Prettier | `3.9.9` | Deterministic formatting |
 | pgTAP | Version shipped by local Supabase | RLS/function/database tests |
 | Maestro | Stable CLI pinned in CI setup | Physical/emulator end-to-end flows |
 
 Expo-managed versions are resolved by the SDK 57 scaffold and `npx expo install --check`; the committed lockfile records the exact result. The initial expected native versions include `expo-network ~57.0.2`, `expo-crypto ~57.0.3`, and `expo-secure-store ~57.0.4`; Expo CLI remains authoritative if a later SDK 57 patch requires a compatible patch adjustment during Phase 0.
+
+Tooling versions must also remain inside Expo SDK 57's supported compatibility range. Do not upgrade Jest or ESLint to a newer major independently: `jest-expo 57` uses Jest 29 internals, while the lint plugins supplied through `eslint-config-expo 57` support ESLint 9 APIs. A newer major may be adopted only with the Expo SDK whose Doctor and lint stack support it.
+
+The lockfile overrides `@react-native/metro-config` to `0.86.3`, matching React Native 0.86.3. This prevents broad transitive ranges from selecting Metro 0.87.x, which npm correctly reports as invalid for React Native's 0.86.3 community CLI plugin.
+
+The lockfile also overrides four transitive packages to the versions Expo SDK 57 ships with, because npm otherwise resolves newer, incompatible releases:
+
+- `react-dom` `19.2.3`: pulled in by `expo-router`; must match the locked React version.
+- `react-native-reanimated` `4.5.1` and `react-native-worklets` `0.10.1`: required by `expo-router` through `react-native-drawer-layout`; these are the SDK 57 bundled native versions (`expo-modules-core` rejects worklets above 0.10).
+- `test-renderer` `1.2.0`: peer of `@testing-library/react-native` 14; later releases require React 19.3.
+
+Rollback: remove an override only when an Expo SDK upgrade resolves the same package to a compatible version and `npm ls --all`, Expo Doctor and all tests pass.
 
 ## 4. Rejected alternatives
 

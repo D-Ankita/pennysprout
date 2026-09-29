@@ -31,6 +31,45 @@ Parent verification is helpful evidence, not a gate. Only admin approval can cre
 - Expo Notifications
 - GitHub Actions for checks and release automation
 
+## Developer setup
+
+Prerequisites: Node.js 24 LTS (`.nvmrc`; `engine-strict` is enabled) and the npm version bundled with it. Android is the only approved platform. Use an Expo development build or an Android emulator; Expo Go is not a supported development environment.
+
+```bash
+nvm use
+npm ci
+cp .env.example .env.local
+npm run android
+```
+
+### Environment
+
+Configuration is validated at startup by `src/config/env.ts`. Missing or invalid values block the app with a configuration error; nothing falls back to another environment.
+
+| Variable                               | Rule                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------- |
+| `EXPO_PUBLIC_APP_ENV`                  | `local`, `staging` or `production`                                     |
+| `EXPO_PUBLIC_SUPABASE_URL`             | http(s) URL; `staging`/`production` require https and a non-local host |
+| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key only; secret or service-role keys are rejected         |
+
+`EXPO_PUBLIC_*` values are embedded in the app bundle. Never put secrets in them. `.env` and `.env*.local` are git-ignored.
+
+### Checks
+
+| Command                  | Purpose                                                      |
+| ------------------------ | ------------------------------------------------------------ |
+| `npm run format:check`   | Prettier (locked docs and migrations are excluded)           |
+| `npm run lint`           | ESLint with `eslint-config-expo`, zero warnings              |
+| `npm run typecheck`      | Strict TypeScript                                            |
+| `npm run test:ci`        | Jest + React Native Testing Library with coverage thresholds |
+| `npm run doctor`         | Expo Doctor                                                  |
+| `npm run export:android` | Production Android bundle export                             |
+| `npm run audit:deps`     | npm audit, failing on high/critical                          |
+| `npm run audit:licenses` | Production dependency license allowlist                      |
+| `npm run check`          | Format, lint, typecheck and tests together                   |
+
+CI (`.github/workflows/ci.yml`) runs all of the above on Node 24 plus a gitleaks secret scan. The Supabase local stack, database/RLS tests and migration lint are added in Phase 1.
+
 ## Documentation
 
 - [Product Requirements](docs/PRD.md)

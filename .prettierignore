@@ -1,0 +1,11 @@
+# Locked specifications and migrations are preserved byte-for-byte.
+docs/
+supabase/
+
+node_modules/
+.expo/
+dist/
+coverage/
+android/
+ios/
+package-lock.json
