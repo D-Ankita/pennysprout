@@ -41,7 +41,7 @@ Scaffold Expo SDK 57 with Node/npm pins, strict TypeScript, Router, lint/format/
 
 ### 1. Database and authentication foundation
 
-Initialize Supabase config/seed/tests. Reconcile/apply schema; implement username gateway, account provisioning/reset, forced password change, profiles/memberships and RLS. Done when four roles authenticate locally and every unauthorized matrix case fails.
+Initialize Supabase config/seed/tests. Reconcile/apply schema; implement username gateway, account provisioning/reset, forced password change, profiles/memberships and RLS. Run the `0002` app-session/error-report pgTAP suite in CI, create app sessions in the gateway and wire `touch_app_session`, `end_app_session`, the `src/auth/inactivity.ts` check and the `src/observability/error-report.ts` reporter into the client. Done when four roles authenticate locally and every unauthorized matrix case fails.
 
 ### 2. Tasks and proposals
 

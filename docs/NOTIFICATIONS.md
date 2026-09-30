@@ -47,4 +47,4 @@ Request notification permission after sign-in with contextual copy, not on first
 
 ## 7. Verification
 
-Test transactional enqueue, deduplication, concurrent workers, stale claims, retry schedule, invalid-token disablement, safe payloads, unauthorized deep links, notification failure isolation and receipt processing on a physical Android device or supported Google Play emulator.
+Test transactional enqueue, deduplication, concurrent workers, stale claims, retry schedule, invalid-token disablement, safe payloads, unauthorized deep links, notification failure isolation and receipt processing on a physical Android device or an Android emulator image that includes Google Play services (required for FCM; no Play Console account is involved).

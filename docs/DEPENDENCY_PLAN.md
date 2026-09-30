@@ -86,7 +86,7 @@ Rollback: remove an override only when an Expo SDK upgrade resolves the same pac
 - **Redux/global stores:** rejected because server state dominates and TanStack Query plus small contexts are sufficient.
 - **UI frameworks:** rejected to avoid generic visuals, upgrade coupling and unused surface area.
 - **Direct FCM client/server integration:** rejected for beta; Expo Push Service is adequate and keeps credentials manageable.
-- **Expo Go:** rejected as a production-development environment; use development builds.
+- **Expo Go:** rejected as the development environment; use development builds.
 - **Docker Desktop:** not required; Podman Desktop is the locked free local container runtime.
 - **Paid EAS, Supabase, monitoring or hosting plans:** rejected by the zero-cost constraint.
 - **Google Play distribution:** rejected for the family release; distribute the signed APK directly.
@@ -100,7 +100,7 @@ Rollback: remove an override only when an Expo SDK upgrade resolves the same pac
 | Hosted Supabase Free project | Family acceptance | Owner creates one Free project without a payment method |
 | Android keystore | First signed family APK | Generate locally and back up outside Git |
 | Firebase/FCM Spark credentials | Push testing | Owner creates a no-cost Spark project without Blaze billing |
-| Physical Android device | Beta gate | Install preview APK and test notifications |
+| Physical Android device | Beta gate | Install the locally signed family APK and test notifications |
 | Expo account | Push project registration or optional Free EAS fallback | Keep the account on the non-billable Free plan |
 
 Missing external access blocks only the corresponding environment gate, not unrelated local implementation.
@@ -113,7 +113,7 @@ Every dependency and provider must also satisfy [`ZERO_COST_OPERATIONS.md`](ZERO
 2. Read official release notes for the exact range.
 3. Check engines, peer dependencies, native changes, licenses and advisories.
 4. Update the smallest coherent package set.
-5. Run clean install, Expo Doctor, lint, types, tests, database tests, export, Android preview build and physical smoke test when native code changes.
+5. Run clean install, Expo Doctor, lint, types, tests, database tests, export, local signed APK build and physical smoke test when native code changes.
 6. Record rollback instructions.
 
 Official compatibility references:

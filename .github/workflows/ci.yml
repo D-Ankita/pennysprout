@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      # Non-secret placeholders so the production export validates configuration.
+      # Non-secret local placeholders so the release export validates configuration.
       EXPO_PUBLIC_APP_ENV: local
       EXPO_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
@@ -39,7 +39,7 @@ jobs:
         run: npm run test:ci
       - name: Expo Doctor
         run: npm run doctor
-      - name: Production export (Android)
+      - name: Release export (Android)
         run: npm run export:android
       - name: Dependency audit
         run: npm run audit:deps

@@ -34,7 +34,11 @@ This file resolves product and engineering choices that an implementer might oth
 - A user may remain signed in on multiple devices.
 - Changing a password revokes other sessions but preserves the current successful session.
 - Disabled membership immediately blocks product access.
-- Sessions use `expo-secure-store` and expire through Supabase refresh-token/session policy. The app requires sign-in again after 30 days without use.
+- Sessions are stored with `expo-secure-store`. The app requires sign-in again after 30 days without use. This is enforced without Supabase's paid session-timeout feature:
+  - the client stores last activity in `expo-secure-store` and signs out immediately once 30 inactive days have elapsed;
+  - the server keeps a private app-session record keyed to the Supabase Auth `session_id`, created by the authentication gateway and refreshed by the `touch_app_session` RPC;
+  - every household authorization check requires an unrevoked app session used within the last 30 days, so an expired session is rejected lazily on its next request and the client signs out;
+  - no nightly cleanup job or paid Supabase setting is required.
 
 ## 3. Task definitions and recurrence
 
@@ -121,6 +125,7 @@ This file resolves product and engineering choices that an implementer might oth
 - Offline access is cached and read-only with a visible last-refresh time.
 - There is no offline mutation queue.
 - Financial results are never displayed optimistically.
+- Client crashes are reported only through the restricted, append-only `report_client_error` RPC in the family Supabase project. Reports hold a sanitized error code, app version/build, environment, platform, route template, timestamps and server-derived user/household identifiers. Secrets, credentials, request bodies, financial values, usernames, free-form input and raw logs are never stored. Stack traces are allow-list sanitized and size-limited or omitted. Reporting is rate-limited per user and device, retained for 30 days, and its failure never affects product behavior. No paid crash-reporting or analytics service is used.
 
 ## 10. Streaks and reports
 

@@ -41,26 +41,36 @@ describe('parseEnv', () => {
     expect(parseEnv(env({ EXPO_PUBLIC_SUPABASE_URL: 'http://10.0.2.2:54321' })).ok).toBe(true);
   });
 
-  it.each(['staging', 'production'])('accepts a hosted https URL for %s', (appEnv) => {
+  it('accepts a hosted https URL for family', () => {
     const result = parseEnv(
-      env({ EXPO_PUBLIC_APP_ENV: appEnv, EXPO_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co' }),
+      env({ EXPO_PUBLIC_APP_ENV: 'family', EXPO_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co' }),
     );
-    expect(result.ok).toBe(true);
+    expect(result).toEqual({
+      ok: true,
+      config: {
+        appEnv: 'family',
+        supabaseUrl: 'https://abc.supabase.co',
+        supabasePublishableKey: PUBLISHABLE_KEY,
+      },
+    });
   });
 
   it('fails when every variable is missing instead of falling back', () => {
     expect(issuesOf({})).toEqual([
-      'EXPO_PUBLIC_APP_ENV must be one of local, staging or production',
+      'EXPO_PUBLIC_APP_ENV must be local or family',
       'EXPO_PUBLIC_SUPABASE_URL must be an http(s) URL',
       'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required',
     ]);
   });
 
-  it('rejects an unknown environment name', () => {
-    expect(issuesOf(env({ EXPO_PUBLIC_APP_ENV: 'development' }))).toEqual([
-      'EXPO_PUBLIC_APP_ENV must be one of local, staging or production',
-    ]);
-  });
+  it.each(['development', 'staging', 'production', 'FAMILY'])(
+    'rejects the environment name %s without aliases',
+    (appEnv) => {
+      expect(issuesOf(env({ EXPO_PUBLIC_APP_ENV: appEnv }))).toEqual([
+        'EXPO_PUBLIC_APP_ENV must be local or family',
+      ]);
+    },
+  );
 
   it.each(['not a url', 'ftp://example.com'])('rejects the URL %s', (url) => {
     expect(issuesOf(env({ EXPO_PUBLIC_SUPABASE_URL: url }))).toEqual([
@@ -74,15 +84,15 @@ describe('parseEnv', () => {
     ]);
   });
 
-  it('requires https outside local', () => {
+  it('requires https for family', () => {
     expect(
       issuesOf(
         env({
-          EXPO_PUBLIC_APP_ENV: 'staging',
+          EXPO_PUBLIC_APP_ENV: 'family',
           EXPO_PUBLIC_SUPABASE_URL: 'http://abc.supabase.co',
         }),
       ),
-    ).toEqual(['EXPO_PUBLIC_SUPABASE_URL must use https for staging']);
+    ).toEqual(['EXPO_PUBLIC_SUPABASE_URL must use https for family']);
   });
 
   it.each([
@@ -96,15 +106,15 @@ describe('parseEnv', () => {
     'https://172.31.255.1',
     'https://0.0.0.0',
     'https://[::1]:54321',
-  ])('prevents production from pointing at the local host %s', (url) => {
-    expect(
-      issuesOf(env({ EXPO_PUBLIC_APP_ENV: 'production', EXPO_PUBLIC_SUPABASE_URL: url })),
-    ).toEqual(['EXPO_PUBLIC_SUPABASE_URL must not point at a local host for production']);
+  ])('prevents family from pointing at the local host %s', (url) => {
+    expect(issuesOf(env({ EXPO_PUBLIC_APP_ENV: 'family', EXPO_PUBLIC_SUPABASE_URL: url }))).toEqual(
+      ['EXPO_PUBLIC_SUPABASE_URL must not point at a local host for family'],
+    );
   });
 
   it('does not treat public 172.x addresses as private', () => {
     const result = parseEnv(
-      env({ EXPO_PUBLIC_APP_ENV: 'production', EXPO_PUBLIC_SUPABASE_URL: 'https://172.32.0.1' }),
+      env({ EXPO_PUBLIC_APP_ENV: 'family', EXPO_PUBLIC_SUPABASE_URL: 'https://172.32.0.1' }),
     );
     expect(result.ok).toBe(true);
   });
@@ -140,13 +150,13 @@ describe('readBundledEnv', () => {
   });
 
   it('reads only the public PennySprout variables', () => {
-    process.env.EXPO_PUBLIC_APP_ENV = 'staging';
+    process.env.EXPO_PUBLIC_APP_ENV = 'family';
     process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://abc.supabase.co';
     process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY = PUBLISHABLE_KEY;
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'must-not-be-read';
 
     expect(readBundledEnv()).toEqual({
-      EXPO_PUBLIC_APP_ENV: 'staging',
+      EXPO_PUBLIC_APP_ENV: 'family',
       EXPO_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co',
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: PUBLISHABLE_KEY,
     });

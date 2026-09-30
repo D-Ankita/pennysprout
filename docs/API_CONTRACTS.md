@@ -28,7 +28,7 @@ Money values are integer paise. IDs are UUIDs. Timestamps are ISO-8601 UTC strin
 
 ## 2. Stable error codes
 
-`AUTH_INVALID_CREDENTIALS`, `AUTH_ACCOUNT_LOCKED`, `AUTH_PASSWORD_CHANGE_REQUIRED`, `MEMBERSHIP_DISABLED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_PROPOSAL`, `TASK_INACTIVE`, `OCCURRENCE_NOT_AVAILABLE`, `COMPLETION_LIMIT_REACHED`, `SUBMISSION_ATTEMPT_LIMIT_REACHED`, `ALREADY_DECIDED`, `IDEMPOTENCY_CONFLICT`, `INSUFFICIENT_SPENDABLE`, `INSUFFICIENT_SAVINGS`, `PAYOUT_EXCEEDS_UNPAID`, `ALREADY_REVERSED`, `NETWORK_UNAVAILABLE`, `SERVER_UNAVAILABLE`, `UNKNOWN_ERROR`.
+`AUTH_INVALID_CREDENTIALS`, `AUTH_ACCOUNT_LOCKED`, `AUTH_PASSWORD_CHANGE_REQUIRED`, `AUTH_SESSION_EXPIRED`, `MEMBERSHIP_DISABLED`, `FORBIDDEN`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_PROPOSAL`, `TASK_INACTIVE`, `OCCURRENCE_NOT_AVAILABLE`, `COMPLETION_LIMIT_REACHED`, `SUBMISSION_ATTEMPT_LIMIT_REACHED`, `ALREADY_DECIDED`, `IDEMPOTENCY_CONFLICT`, `INSUFFICIENT_SPENDABLE`, `INSUFFICIENT_SAVINGS`, `PAYOUT_EXCEEDS_UNPAID`, `ALREADY_REVERSED`, `NETWORK_UNAVAILABLE`, `SERVER_UNAVAILABLE`, `UNKNOWN_ERROR`.
 
 The UI maps expected codes to approved copy. Raw SQL messages, stack traces and secrets are never returned.
 
@@ -36,7 +36,7 @@ The UI maps expected codes to approved copy. Raw SQL messages, stack traces and 
 
 ### `auth-sign-in`
 
-Input: `{ username, password }`. Normalize username, enforce lockout, look up the service-only random Auth alias, call Supabase password grant, update failure controls, and return the Supabase session plus `mustChangePassword`. Response is generic on all credential failures. The client must not render or log the Auth email that may be present in the session user object.
+Input: `{ username, password }`. Normalize username, enforce lockout, look up the service-only random Auth alias, call Supabase password grant, update failure controls, create the app session with `gateway_start_app_session(user_id, session_id)` (failing closed), and return the Supabase session plus `mustChangePassword`. Response is generic on all credential failures. The client must not render or log the Auth email that may be present in the session user object.
 
 ### `admin-create-member`
 
@@ -44,15 +44,15 @@ Admin JWT required. Input: `{ householdId, username, displayName, role, temporar
 
 ### `admin-reset-password`
 
-Admin JWT required. Input: `{ householdId, userId, temporaryPassword, meta }`. Updates Auth password, sets forced-change flag, revokes sessions and audits the action.
+Admin JWT required. Input: `{ householdId, userId, temporaryPassword, meta }`. Updates Auth password, sets forced-change flag, revokes Auth sessions and app sessions (`ADMIN_RESET`) and audits the action.
 
 ### `change-temporary-password`
 
-Authenticated user input: `{ newPassword }`. Updates Auth password, clears forced-change flag and revokes other sessions.
+Authenticated user input: `{ newPassword }`. Updates Auth password, clears forced-change flag and revokes other Auth and app sessions (`PASSWORD_CHANGED`), keeping the current one.
 
 ## 4. Database RPC catalogue
 
-All mutation RPCs accept `p_idempotency_key uuid` except simple verification/cancellation where a unique database constraint already makes replay safe. All derive actor from `auth.uid()`; no caller-supplied actor is trusted.
+All mutation RPCs accept `p_idempotency_key uuid` except simple verification/cancellation where a unique database constraint already makes replay safe, and the session/telemetry functions `touch_app_session`, `end_app_session` and `report_client_error`, which are naturally repeatable. All derive actor from `auth.uid()`; no caller-supplied actor is trusted.
 
 | RPC | Authorized actor | Required result |
 |---|---|---|
@@ -83,6 +83,11 @@ All mutation RPCs accept `p_idempotency_key uuid` except simple verification/can
 | `create_adjustment` | Admin | Adjustment and balances |
 | `set_member_status` | Admin | Updated membership |
 | `register_push_token` | Current user | Token registration projection |
+| `touch_app_session` | Current user | `{ lastActivityAt }`, or `AUTH_SESSION_EXPIRED`/`MEMBERSHIP_DISABLED` |
+| `end_app_session` | Current user | `{ ended: true }` |
+| `report_client_error` | Current user | `{ accepted }`; `accepted: false` when rate-limited |
+| `gateway_start_app_session` | `service_role` only | void; raises on conflict |
+| `gateway_revoke_app_sessions` | `service_role` only | Number of sessions revoked |
 
 Detailed SQL signatures use entity IDs, validated typed values, optional notes, and the idempotency key. Each function locks decision rows with `FOR UPDATE`; money commands take the `(household, child)` advisory lock before reading balances.
 
@@ -172,7 +177,23 @@ reverse_payout(p_transaction_id uuid, p_reason text, p_idempotency_key uuid) ret
 create_adjustment(p_child_user_id uuid, p_bucket ledger_bucket, p_signed_amount_minor bigint, p_reason text, p_related_transaction_id uuid, p_idempotency_key uuid) returns jsonb
 set_member_status(p_user_id uuid, p_status membership_status, p_reason text, p_idempotency_key uuid) returns jsonb
 register_push_token(p_expo_push_token text, p_device_label text, p_idempotency_key uuid) returns jsonb
+
+touch_app_session() returns jsonb
+end_app_session() returns jsonb
+report_client_error(
+  p_error_code text, p_app_version text, p_build_number text, p_environment text,
+  p_platform text, p_route text, p_occurred_at timestamptz, p_stack text,
+  p_device_install_id uuid
+) returns jsonb
+
+-- service_role only; called by authentication Edge Functions
+gateway_start_app_session(p_user_id uuid, p_session_id uuid) returns void
+gateway_revoke_app_sessions(p_user_id uuid, p_except_session_id uuid, p_reason text) returns integer
 ```
+
+Every household authorization helper (`is_active_household_member`, `has_household_role`) also requires `has_active_app_session()`: an unrevoked `private.app_sessions` row for the JWT `session_id` and `auth.uid()`, used within 30 days. Product RPCs must authorize through these helpers and map a missing/expired app session to `AUTH_SESSION_EXPIRED`.
+
+`report_client_error` accepts only: an error code matching `^[A-Z][A-Z0-9_]{1,63}$`, a semantic app version, a numeric build number, `local` or `family`, platform `android`, a route template matching `^/[A-Za-z0-9_/()\[\].-]{0,199}$`, an occurrence time within the last 7 days, an optional stack and a random per-install UUID. The household is derived server-side. A stack is stored only if every line is a recognised frame (identifier, bundle-relative path, line and column) within 30 lines and 4,000 characters; otherwise it is dropped. Limits: 10 reports per user/device per hour and 50 per user per day; excess reports return `accepted: false`. Reports older than 30 days are deleted in bounded batches.
 
 Decision parameters accept only the relevant terminal value (`APPROVED` or `REJECTED`); cancellation has its own function. Nullable replacement/applied inputs are validated according to proposal/correction type. Admin actions always derive household membership from the target entity rather than accepting a household ID from the client.
 

@@ -1,6 +1,6 @@
 # PennySprout Exact Database Schema
 
-The executable schema is [`supabase/migrations/0001_initial_schema.sql`](../supabase/migrations/0001_initial_schema.sql). This document explains the contract implementers must preserve.
+The executable schema is the ordered set of migrations in [`supabase/migrations/`](../supabase/migrations/): [`0001_initial_schema.sql`](../supabase/migrations/0001_initial_schema.sql) and [`0002_app_sessions_and_error_reports.sql`](../supabase/migrations/0002_app_sessions_and_error_reports.sql). pgTAP tests live in [`supabase/tests/database/`](../supabase/tests/database/). This document explains the contract implementers must preserve.
 
 ## 1. Ownership and identity
 
@@ -9,6 +9,8 @@ The executable schema is [`supabase/migrations/0001_initial_schema.sql`](../supa
 - `households` owns all product data and defines currency/timezone.
 - `household_members` grants one role per user per household and tracks invitation status.
 - Beta assumes one active membership per user in the app, while every data key remains household-scoped.
+
+`private.app_sessions` stores one row per Supabase Auth session (`session_id` from the JWT) with `last_activity_at` and an optional revocation (`SIGNED_OUT`, `INACTIVITY`, `PASSWORD_CHANGED`, `ADMIN_RESET`, `MEMBERSHIP_DISABLED`). `public.has_active_app_session()` is true only for an unrevoked row owned by `auth.uid()` and used within 30 days. `is_active_household_member`, `has_household_role` and the `profiles` RLS policy all require it, so every household read and RPC enforces the 30-day inactivity rule without Supabase's paid session settings.
 
 All references to a Child use the composite membership key `(household_id, child_user_id)`, not an unconstrained user UUID.
 
@@ -44,6 +46,8 @@ Uniqueness constraints on transaction references provide the final idempotency b
 
 Audit metadata must not contain auth tokens, secrets, or unnecessary child personal data.
 
+- `private.client_error_reports` is the free crash-report store. It is append-only (updates rejected by trigger), has no client grants and is written only through `report_client_error`. Columns are limited to user, server-derived household, random device-install ID, error code, app version/build, environment (`local`/`family`), platform (`android`), route template, occurrence/receipt times and an optional sanitized stack of at most 4,000 characters. Rows older than 30 days are removed in bounded batches by later reports.
+
 ## 5. Mutation boundary
 
 Authenticated clients have read-only table access where RLS permits it. Every product mutation, including creation of pending requests, goes through a named function with explicit role and invariant checks:
@@ -78,8 +82,8 @@ For the first empty beta database:
 
 1. Apply the migration locally.
 2. Run schema and RLS integration tests using separate Child, Parent, Admin, and unrelated-household identities.
-3. Seed the beta household through a non-production seed script using real Auth user IDs.
+3. Seed the beta household through the local-only seed script using real Auth user IDs.
 4. Apply to the hosted Supabase Free family project only after local tests and an encrypted logical backup.
-5. Back up before production apply; record the applied migration version.
+5. Connect through the shared session-mode pooler (never the paid IPv4 add-on), take the encrypted logical export first and record the applied migration version.
 
 This migration has not been applied to any remote Supabase project merely by being committed to the repository.

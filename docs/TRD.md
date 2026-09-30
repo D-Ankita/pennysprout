@@ -44,7 +44,8 @@ The main aggregates are:
 - work: `tasks`, `task_schedule_weekdays`, `task_proposals`, `task_completions`, `completion_verifications`;
 - finance: `ledger_transactions`, `ledger_postings`, `expense_correction_requests`, `savings_withdrawal_requests`;
 - learning: `savings_goals`, `savings_goal_allocations`;
-- reliability: `idempotency_keys`, `audit_events`, `notification_outbox`, `push_tokens`.
+- reliability: `idempotency_keys`, `audit_events`, `notification_outbox`, `push_tokens`;
+- sessions and observability: `private.app_sessions`, `private.client_error_reports`.
 
 The normative transitions are in [STATE_MACHINES.md](STATE_MACHINES.md). Financial posting rules are in [FINANCIAL_MODEL.md](FINANCIAL_MODEL.md).
 
@@ -168,9 +169,9 @@ Capture:
 - failed privileged transactions
 - duplicate/idempotency violations
 - notification failures
-- client crashes
+- client crashes, through the restricted `report_client_error` RPC into `private.client_error_reports` (sanitized fields only, rate-limited, 30-day retention; see `API_CONTRACTS.md`)
 
-Never log authentication tokens or sensitive secrets.
+Never log authentication tokens or sensitive secrets. No paid crash-reporting or analytics service is used.
 
 ## 10. Testing
 

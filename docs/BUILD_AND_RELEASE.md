@@ -44,12 +44,12 @@ Family distribution is direct APK sideloading. EAS Build, EAS Submit, Google Pla
 7. Verify migration version, reconciliation and critical flows.
 8. Forward-repair with a new migration if rollback risks data loss.
 
-Never edit a migration already applied to production.
+Never edit a migration already applied to the hosted family project. Hosted migrations connect through the shared session-mode pooler; the paid IPv4 add-on is prohibited.
 
 ## 6. Backup and recovery
 
 - Do not require Supabase paid managed backups or PITR.
-- Create an encrypted logical export before every hosted migration and at least daily while the beta is actively used.
+- Create an encrypted logical export before every hosted migration and at least daily while the beta is actively used, connecting through the shared session-mode pooler (see `ZERO_COST_OPERATIONS.md`).
 - Retain the latest seven successful exports in two owner-controlled locations outside Git.
 - Beta targets: recovery point within 24 hours and service restoration within 8 hours.
 - Prove a restore before family beta and after any backup-script change.

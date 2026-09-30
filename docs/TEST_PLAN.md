@@ -61,7 +61,18 @@ Test each Child, Parent and Admin capability from `RBAC.md`, including denial. M
 - Parent task/expense/savings/payout mutation;
 - modification/deletion of ledger and audit history;
 - cross-child references within a future multi-child household;
-- direct invocation of service-only authentication data/functions.
+- direct invocation of service-only authentication data/functions;
+- missing, mismatched, malformed, revoked or 30-day-idle app sessions (lazy rejection through RLS and RPC helpers);
+- client read or direct write of `private.app_sessions` or `private.client_error_reports`.
+
+### Session and crash-report cases
+
+- the gateway creates an app session at sign-in and a session ID cannot be claimed by another user or revived after revocation;
+- 29 days 23 hours idle is accepted and exactly 30 days is rejected; `touch_app_session` refreshes activity or records `INACTIVITY`;
+- password change revokes other sessions only; Admin reset and disablement revoke all; sign-out ends the current session;
+- the client signs out from `expo-secure-store` state after 30 inactive days without a network call;
+- crash reports accept only allow-listed fields, drop unsafe stacks, derive household server-side, enforce per-device/per-user limits and delete rows older than 30 days;
+- reporting failures never reject or change product behavior.
 
 ## 5. State and idempotency cases
 
@@ -96,7 +107,7 @@ Every screen covers loading, populated, empty, refreshing, retryable error, offl
 
 ## 8. CI required checks
 
-`npm ci`, format check, ESLint, strict typecheck, unit/component tests with coverage, Supabase fresh reset, database/RLS tests, migration lint, `npx expo-doctor`, production export, secret scan, and dependency/license audit. Required checks must pass before merge.
+`npm ci`, format check, ESLint, strict typecheck, unit/component tests with coverage, Supabase fresh reset, database/RLS tests, migration lint, `npx expo-doctor`, release export, secret scan, and dependency/license audit. Required checks must pass before merge.
 
 ## 9. Manual device matrix
 

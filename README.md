@@ -50,11 +50,11 @@ npm run android
 
 Configuration is validated at startup by `src/config/env.ts`. Missing or invalid values block the app with a configuration error; nothing falls back to another environment.
 
-| Variable                               | Rule                                                                   |
-| -------------------------------------- | ---------------------------------------------------------------------- |
-| `EXPO_PUBLIC_APP_ENV`                  | `local`, `staging` or `production`                                     |
-| `EXPO_PUBLIC_SUPABASE_URL`             | http(s) URL; `staging`/`production` require https and a non-local host |
-| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key only; secret or service-role keys are rejected         |
+| Variable                               | Rule                                                           |
+| -------------------------------------- | -------------------------------------------------------------- |
+| `EXPO_PUBLIC_APP_ENV`                  | `local` or `family`                                            |
+| `EXPO_PUBLIC_SUPABASE_URL`             | http(s) URL; `family` requires https and a non-local host      |
+| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key only; secret or service-role keys are rejected |
 
 `EXPO_PUBLIC_*` values are embedded in the app bundle. Never put secrets in them. `.env` and `.env*.local` are git-ignored.
 
@@ -67,9 +67,9 @@ Configuration is validated at startup by `src/config/env.ts`. Missing or invalid
 | `npm run typecheck`      | Strict TypeScript                                            |
 | `npm run test:ci`        | Jest + React Native Testing Library with coverage thresholds |
 | `npm run doctor`         | Expo Doctor                                                  |
-| `npm run export:android` | Production Android bundle export                             |
+| `npm run export:android` | Release-mode Android bundle export                           |
 | `npm run audit:deps`     | npm audit, failing on high/critical                          |
-| `npm run audit:licenses` | Production dependency license allowlist                      |
+| `npm run audit:licenses` | Runtime (non-dev) dependency license allowlist               |
 | `npm run check`          | Format, lint, typecheck and tests together                   |
 
 CI (`.github/workflows/ci.yml`) runs all of the above on Node 24 plus a gitleaks secret scan. The Supabase local stack, database/RLS tests and migration lint are added in Phase 1.

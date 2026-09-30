@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const APP_ENVIRONMENTS = ['local', 'staging', 'production'] as const;
+export const APP_ENVIRONMENTS = ['local', 'family'] as const;
 export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];
 
 export type AppConfig = {
@@ -57,7 +57,7 @@ function decodeJwtRole(token: string): string | null {
 const envSchema = z
   .object({
     EXPO_PUBLIC_APP_ENV: z.enum(APP_ENVIRONMENTS, {
-      error: 'EXPO_PUBLIC_APP_ENV must be one of local, staging or production',
+      error: 'EXPO_PUBLIC_APP_ENV must be local or family',
     }),
     EXPO_PUBLIC_SUPABASE_URL: z.url({
       protocol: /^https?$/,
@@ -71,19 +71,19 @@ const envSchema = z
   .superRefine((env, ctx) => {
     // Zod still runs this refinement when a field has a non-fatal format issue.
     const url = parseUrl(env.EXPO_PUBLIC_SUPABASE_URL);
-    if (url && env.EXPO_PUBLIC_APP_ENV !== 'local') {
+    if (url && env.EXPO_PUBLIC_APP_ENV === 'family') {
       if (url.protocol !== 'https:') {
         ctx.addIssue({
           code: 'custom',
           path: ['EXPO_PUBLIC_SUPABASE_URL'],
-          message: `EXPO_PUBLIC_SUPABASE_URL must use https for ${env.EXPO_PUBLIC_APP_ENV}`,
+          message: 'EXPO_PUBLIC_SUPABASE_URL must use https for family',
         });
       }
       if (isLocalHost(url.hostname)) {
         ctx.addIssue({
           code: 'custom',
           path: ['EXPO_PUBLIC_SUPABASE_URL'],
-          message: `EXPO_PUBLIC_SUPABASE_URL must not point at a local host for ${env.EXPO_PUBLIC_APP_ENV}`,
+          message: 'EXPO_PUBLIC_SUPABASE_URL must not point at a local host for family',
         });
       }
     }

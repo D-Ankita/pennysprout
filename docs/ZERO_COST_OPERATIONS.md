@@ -16,6 +16,7 @@ PennySprout must be developable, tested, hosted for the family beta, built and d
 | Push transport | Expo Push Service plus Firebase Cloud Messaging Spark plan | Both are used only in their no-cost modes; no Blaze billing account |
 | CI | Included GitHub Actions allowance plus mandatory local checks | If included minutes are exhausted, CI waits; no paid minutes or larger runners |
 | Monitoring | Application logs and provider free dashboards | No paid monitoring, analytics, log drain or retention add-on |
+| Crash reporting | Restricted append-only `report_client_error` RPC into the Supabase Free project | No paid crash-reporting, analytics or log service |
 | Backups | Encrypted logical database exports owned by Admin | No Supabase paid backup/PITR feature |
 | Web presence | None | No custom domain, hosting, support site or paid email service |
 
@@ -27,6 +28,18 @@ PennySprout must be developable, tested, hosted for the family beta, built and d
 - Do not enable a Pro plan, paid compute, custom domain, PITR, log drain or other paid add-on.
 - Before every hosted migration and at least daily while the beta is actively used, create an encrypted logical export and retain the latest seven successful exports in two owner-controlled locations outside Git. Test restoration before beta and after any backup-script change.
 - This application records virtual family balances, not bank-held money. If the reliability needs later exceed these constraints, stop and obtain a new owner decision; do not silently introduce cost.
+
+## Database connection rule
+
+- Hosted migrations, encrypted logical backups and every administrative database connection use Supabase's shared pooler in **session mode** (IPv4-reachable on the Free plan).
+- The paid IPv4 add-on is prohibited.
+- A direct database connection may be used only where IPv6 is already available at no cost.
+- Connection strings take the form `postgresql://postgres.<project-ref>:<password>@<shared-pooler-host>:5432/postgres`, copied from the dashboard's Connect panel (Session pooler). They are supplied through the environment or an interactive prompt at run time and are never committed, logged or placed in a URL outside the connection itself.
+
+## Authentication session rule
+
+- Supabase's session time-box, inactivity timeout and single-session settings are paid features and must not be enabled or relied on.
+- The 30-day inactivity sign-out is implemented by the application: a server-authoritative `private.app_sessions` record keyed to the JWT `session_id`, checked by every household authorization helper, plus an `expo-secure-store` last-activity check on the device. Expiry is evaluated lazily on each request; no scheduled cleanup job is required.
 
 ## Build and signing constraints
 

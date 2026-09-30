@@ -187,3 +187,27 @@ Reason: lint and Expo Doctor are required gates. Suppressing Doctor checks or re
 Development uses Podman Desktop, the Supabase CLI and the local Android toolchain. The family beta uses one Supabase Free project, no-cost Expo/FCM push delivery and directly distributed locally signed APKs. It does not require Docker Desktop, a paid EAS plan, Google Play Console, a custom domain, paid monitoring or Supabase paid backups. No payment method or automatic overage is approved.
 
 Reason: the owner requires development and family distribution to incur no cost. Free-quota exhaustion therefore pauses the affected service or falls back to local tooling; it never triggers an upgrade. `ZERO_COST_OPERATIONS.md` is the authoritative cost guardrail.
+
+## D-029: The 30-day inactivity sign-out is application-owned
+
+Supabase's session time-box and inactivity timeout are paid features. PennySprout instead keeps `private.app_sessions` keyed to the JWT `session_id`. The authentication gateway creates the record at sign-in, `touch_app_session` refreshes it on foreground, and `is_active_household_member`/`has_household_role` (and therefore RLS and every RPC) require an unrevoked record used within 30 days. The client also signs out locally after 30 inactive days using `expo-secure-store`.
+
+Reason: keeps the locked 30-day requirement at zero cost. Expiry is lazy and needs no scheduled job.
+
+## D-030: Database administration uses the free session pooler
+
+Hosted migrations, logical backups and administrative connections use Supabase's shared session-mode pooler. The paid IPv4 add-on is prohibited; direct connections are used only when IPv6 is already available at no cost.
+
+Reason: Free-plan direct connections are IPv6-only, and the IPv4 add-on is billable.
+
+## D-031: Crash reporting is a restricted Supabase table
+
+Client errors are submitted through `report_client_error` into `private.client_error_reports`: append-only, allow-listed fields, sanitized or omitted stack traces, per-user/device rate limits, 30-day lazy retention and no client read access. No paid crash-reporting or analytics service is approved.
+
+Reason: meets the observability requirement for client crashes within the zero-cost constraint and without collecting child personal data.
+
+## D-032: Environments are `local` and `family`
+
+`EXPO_PUBLIC_APP_ENV` accepts only `local` and `family`. `family` requires an https Supabase URL on a non-local host. No `staging` or `production` aliases exist.
+
+Reason: the zero-cost plan has one local stack and one hosted Supabase Free project.
